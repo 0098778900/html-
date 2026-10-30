@@ -2,65 +2,182 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeiroX Mini App</title>
-    <!-- ОБЯЗАТЕЛЬНО: Подключаем скрипт Telegram -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NeiroX Профиль</title>
+    <!-- Подключаем скрипт Telegram Mini Apps -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #1a1a2e);
+            --text-color: var(--tg-theme-text-color, #ffffff);
+            --hint-color: var(--tg-theme-hint-color, #aaaaaa);
+            --button-color: var(--tg-theme-button-color, #00aa44);
+            --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+            --card-bg: rgba(255, 255, 255, 0.05);
+        }
+
         body {
-            background-color: var(--tg-theme-bg-color, #1e1e1e);
-            color: var(--tg-theme-text-color, #ffffff);
-            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
-        h1 { color: #00ff88; }
-        button {
-            background-color: #00aa44;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            border-radius: 10px;
-            cursor: pointer;
+
+        /* Карточка профиля */
+        .profile-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px 20px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
             margin-top: 20px;
+        }
+
+        /* Аватарка */
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid #00ff88;
+            object-fit: cover;
+            margin-bottom: 15px;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .name {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+        }
+
+        .username {
+            font-size: 16px;
+            color: var(--hint-color);
+            margin: 0 0 20px 0;
+        }
+
+        /* Блок со статистикой */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #f1c40f;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--hint-color);
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        /* Кнопка */
+        .btn {
+            background-color: var(--button-color);
+            color: var(--button-text-color);
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 30px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn:active { transform: scale(0.95); }
+
+        /* Ошибка, если нет данных */
+        .error-msg {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 50px;
+            font-size: 18px;
         }
     </style>
 </head>
 <body>
-    <h1>🎮 NeiroX Mini App</h1>
-    <p>Привет, <span id="user-name">друг</span>!</p>
-    <p>Твой ID: <span id="user-id">...</span></p>
-    
-    <button id="main-button">Нажми меня</button>
+
+    <div id="app-content">
+        <!-- Сюда JS вставит карточку профиля -->
+    </div>
 
     <script>
-        // Получаем доступ к API Telegram
         const tg = window.Telegram.WebApp;
-        
-        // Говорим Telegram, что приложение готово
         tg.ready();
+        tg.expand(); // Разворачиваем на весь экран
 
-        // Получаем данные пользователя
         const user = tg.initDataUnsafe?.user;
-        if (user) {
-            document.getElementById('user-name').innerText = user.first_name;
-            document.getElementById('user-id').innerText = user.id;
-        }
+        const appContent = document.getElementById('app-content');
 
-        // Обработка кнопки
-        document.getElementById('main-button').addEventListener('click', () => {
-            // Отправляем данные обратно в бота (если нужно)
-            tg.sendData(JSON.stringify({ action: "button_clicked" }));
+        if (user) {
+            // Если пользователь есть, строим профиль
+            // Аватарка (если нет, ставим заглушку)
+            const avatarUrl = user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.first_name) + '&background=00aa44&color=fff&size=200';
             
-            // Или просто показываем алерт
-            tg.showAlert("Ты нажал кнопку в Mini App!");
-        });
+            // Формируем HTML
+            appContent.innerHTML = `
+                <div class="profile-card">
+                    <img src="${avatarUrl}" alt="Avatar" class="avatar">
+                    <h1 class="name">${user.first_name}</h1>
+                    <p class="username">@${user.username || 'нет_юзернейма'}</p>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value" id="user-id">${user.id}</span>
+                            <span class="stat-label">Telegram ID</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" style="color: #00ff88;">⭐ 0</span>
+                            <span class="stat-label">Баланс</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">0</span>
+                            <span class="stat-label">Игр сыграно</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">0</span>
+                            <span class="stat-label">Побед</span>
+                        </div>
+                    </div>
+
+                    <button class="btn" onclick="tg.close()">Закрыть профиль</button>
+                </div>
+            `;
+        } else {
+            // Если открыто не из Telegram
+            appContent.innerHTML = `
+                <div class="error-msg">
+                    ⚠️ Этот профиль доступен только внутри Telegram.<br>
+                    Пожалуйста, откройте Mini App через нашего бота.
+                </div>
+            `;
+        }
     </script>
 </body>
 </html>
