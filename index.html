@@ -3,201 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NeiroX Профиль</title>
+    <title>NeiroX Casino</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: var(--tg-theme-bg-color, #0f0f1a); /* Сделали фон чуть темнее */
+            --bg-color: var(--tg-theme-bg-color, #0f0f1a);
             --text-color: var(--tg-theme-text-color, #ffffff);
-            --hint-color: var(--tg-theme-hint-color, #aaaaaa);
-            --button-color: var(--tg-theme-button-color, #00aa44);
-            --button-text-color: var(--tg-theme-button-text-color, #ffffff);
-            --card-bg: rgba(30, 30, 46, 0.8);
+            --button-color: #f1c40f;
+            --danger-color: #c0392b;
+            --success-color: #00aa44;
         }
 
         body {
-            background-color: var(--bg-color);
-            /* Добавили радиальный градиент на фон всего приложения */
-            background: radial-gradient(circle at top, #1a1a2e 0%, #0f0f1a 100%);
+            background: radial-gradient(circle at center, #1a1a2e, #0f0f1a);
             color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; box-sizing: border-box;
         }
 
-        .profile-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 30px 20px;
-            width: 100%;
-            max-width: 400px;
+        .balance-box {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 30px;
+            border-radius: 15px;
+            border: 2px solid #f1c40f;
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.2);
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
-            margin-top: 20px;
-            position: relative;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 350px;
+        }
+        .balance-title { font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+        .balance-value { font-size: 36px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); }
+
+        /* Барабаны */
+        .slots-container {
+            display: flex; gap: 10px;
+            background: #111;
+            padding: 20px;
+            border-radius: 20px;
+            border: 4px solid #333;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
+        }
+
+        .reel {
+            width: 80px; height: 100px;
+            background: #222;
+            border-radius: 10px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 50px;
+            border: 2px solid #444;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
             overflow: hidden;
-        }
-
-        /* --- МАГИЯ ЗА АВАТАРКОЙ --- */
-        .avatar-container {
             position: relative;
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 15px auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
-        /* Пульсирующее неоновое кольцо */
-        .avatar-container::before {
-            content: '';
-            position: absolute;
-            top: -5px; left: -5px; right: -5px; bottom: -5px;
-            border-radius: 50%;
-            background: conic-gradient(from 0deg, #00ff88, #00aaff, #ff00ff, #00ff88);
-            animation: rotate 4s linear infinite;
-            z-index: 0;
-            filter: blur(8px);
-            opacity: 0.8;
+        /* Анимация кручения */
+        .reel.spinning {
+            animation: spin 0.2s linear infinite;
         }
 
-        /* Второе кольцо для пульсации */
-        .avatar-container::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 50%;
-            box-shadow: 0 0 30px #00ff88;
-            animation: pulse 2s ease-in-out infinite;
-            z-index: 0;
+        @keyframes spin {
+            0% { transform: translateY(-10px); }
+            50% { transform: translateY(10px); }
+            100% { transform: translateY(-10px); }
         }
 
-        .avatar {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            border: 4px solid #111;
-            object-fit: cover;
-            position: relative;
-            z-index: 1; /* Аватарка поверх свечения */
+        /* Панель управления */
+        .controls {
+            width: 100%; max-width: 350px;
+            display: flex; flex-direction: column; gap: 15px;
         }
 
-        /* Анимации */
-        @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
-            50% { box-shadow: 0 0 50px rgba(0, 255, 136, 0.8); }
-            100% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
-        }
-
-        .name { font-size: 24px; font-weight: bold; margin: 0 0 5px 0; }
-        .username { font-size: 16px; color: var(--hint-color); margin: 0 0 20px 0; }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .stat-item {
-            background: rgba(0, 0, 0, 0.3);
+        .bet-input {
+            width: 100%;
             padding: 15px;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border: 1px solid rgba(255,255,255,0.05);
+            font-size: 20px;
+            background: #000;
+            border: 2px solid #555;
+            color: #f1c40f;
+            border-radius: 10px;
+            text-align: center;
+            box-sizing: border-box;
+            font-weight: bold;
         }
-
-        .stat-value { font-size: 22px; font-weight: bold; color: #f1c40f; }
-        .stat-label { font-size: 12px; color: var(--hint-color); text-transform: uppercase; margin-top: 5px; }
 
         .btn {
-            background-color: var(--button-color);
-            color: var(--button-text-color);
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-size: 16px;
+            padding: 20px;
+            font-size: 20px;
             font-weight: bold;
-            width: 100%;
-            margin-top: 30px;
+            border: none;
+            border-radius: 10px;
             cursor: pointer;
-            transition: transform 0.2s;
-            z-index: 2;
-            position: relative;
+            transition: 0.2s;
+            text-transform: uppercase;
         }
-        .btn:active { transform: scale(0.95); }
 
-        .error-msg { color: #e74c3c; text-align: center; margin-top: 50px; font-size: 18px; }
+        .btn-spin {
+            background: var(--success-color);
+            color: white;
+            box-shadow: 0 0 20px rgba(0, 170, 68, 0.4);
+        }
+        .btn-spin:active { transform: scale(0.95); }
+        .btn-spin:disabled { background: #333; color: #666; box-shadow: none; cursor: not-allowed; }
+
+        /* Результат */
+        .result-text {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            height: 30px;
+            margin-top: 20px;
+            text-shadow: 0 0 10px currentColor;
+        }
     </style>
 </head>
 <body>
 
-    <div id="app-content"></div>
+    <div class="balance-box">
+        <div class="balance-title">Твой баланс</div>
+        <div class="balance-value" id="balance">1000</div>
+    </div>
+
+    <div class="slots-container">
+        <div class="reel" id="reel1">🍒</div>
+        <div class="reel" id="reel2">🍋</div>
+        <div class="reel" id="reel3">💎</div>
+    </div>
+
+    <div class="controls">
+        <input type="number" id="betAmount" class="bet-input" value="100" min="100" step="50">
+        <button class="btn btn-spin" id="spinBtn" onclick="spin()">КРУТИТЬ 🎰</button>
+    </div>
+
+    <div class="result-text" id="resultText"></div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
 
-        const user = tg.initDataUnsafe?.user;
-        const appContent = document.getElementById('app-content');
+        let balance = 1000; // Стартовый баланс в мини-игре
+        let isSpinning = false;
 
-        if (user) {
-            const avatarUrl = user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.first_name) + '&background=00aa44&color=fff&size=200';
+        const symbols = ['🍒', '🍋', '🍊', '💎', '7️⃣', '🔔'];
+        const balanceDisplay = document.getElementById('balance');
+        const resultText = document.getElementById('resultText');
+        const spinBtn = document.getElementById('spinBtn');
+        const betInput = document.getElementById('betAmount');
+
+        function updateBalance() {
+            balanceDisplay.innerText = balance;
+        }
+
+        function spin() {
+            if (isSpinning) return;
+
+            const bet = parseInt(betInput.value);
+
+            // Проверки
+            if (isNaN(bet) || bet < 100) {
+                resultText.innerText = "Минимальная ставка 100!";
+                resultText.style.color = "#e74c3c";
+                return;
+            }
+            if (bet > balance) {
+                resultText.innerText = "Недостаточно средств!";
+                resultText.style.color = "#e74c3c";
+                return;
+            }
+
+            // Списываем ставку
+            balance -= bet;
+            updateBalance();
+            resultText.innerText = "";
+            isSpinning = true;
+            spinBtn.disabled = true;
+
+            // Добавляем класс анимации
+            const reels = [
+                document.getElementById('reel1'),
+                document.getElementById('reel2'),
+                document.getElementById('reel3')
+            ];
             
-            appContent.innerHTML = `
-                <div class="profile-card">
-                    <!-- Обертка для аватарки с анимацией -->
-                    <div class="avatar-container">
-                        <img src="${avatarUrl}" alt="Avatar" class="avatar">
-                    </div>
-                    
-                    <h1 class="name">${user.first_name}</h1>
-                    <p class="username">@${user.username || 'нет_юзернейма'}</p>
-                    
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="stat-value" style="color: #00aaff;">${user.id}</span>
-                            <span class="stat-label">ID</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value" style="color: #00ff88;">⭐ 0</span>
-                            <span class="stat-label">Баланс</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">0</span>
-                            <span class="stat-label">Игр</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">0</span>
-                            <span class="stat-label">Побед</span>
-                        </div>
-                    </div>
+            reels.forEach(r => r.classList.add('spinning'));
 
-                    <button class="btn" onclick="tg.close()">Закрыть профиль</button>
-                </div>
-            `;
-        } else {
-            appContent.innerHTML = `
-                <div class="error-msg">
-                    ⚠️ Этот профиль доступен только внутри Telegram.<br>
-                    Пожалуйста, откройте Mini App через нашего бота.
-                </div>
-            `;
+            // Длительность анимации
+            const spinDuration = 2000; 
+            const startTime = Date.now();
+
+            // Интервал смены картинок во время кручения
+            const spinInterval = setInterval(() => {
+                reels.forEach(r => {
+                    r.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+                });
+            }, 50); // Каждые 50мс меняем картинку
+
+            // Остановка
+            setTimeout(() => {
+                clearInterval(spinInterval);
+                reels.forEach(r => r.classList.remove('spinning'));
+
+                // Генерируем финальный результат
+                const result1 = symbols[Math.floor(Math.random() * symbols.length)];
+                const result2 = symbols[Math.floor(Math.random() * symbols.length)];
+                const result3 = symbols[Math.floor(Math.random() * symbols.length)];
+
+                reels[0].innerText = result1;
+                reels[1].innerText = result2;
+                reels[2].innerText = result3;
+
+                // Проверка выигрыша (3 в ряд)
+                if (result1 === result2 && result2 === result3) {
+                    // Выигрыш x3 от ставки
+                    const winAmount = bet * 3;
+                    balance += winAmount;
+                    updateBalance();
+                    resultText.innerText = `🎉 ДЖЕКПОТ! Выигрыш: +${winAmount}`;
+                    resultText.style.color = "#f1c40f";
+                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                } else {
+                    resultText.innerText = `😢 Проигрыш: -${bet}`;
+                    resultText.style.color = "#e74c3c";
+                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                }
+
+                isSpinning = false;
+                spinBtn.disabled = false;
+                
+                // Если денег нет — блокируем кнопку
+                if (balance < 100) {
+                    spinBtn.disabled = true;
+                    resultText.innerText = "У тебя закончились деньги!";
+                }
+
+            }, spinDuration);
         }
     </script>
 </body>
