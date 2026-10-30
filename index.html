@@ -224,7 +224,7 @@
 
             // 2. ЗАПРАШИВАЕМ БАЛАНС ИЗ БД
             // ВНИМАНИЕ: Здесь указан локальный сервер. Потом поменяешь на Render.
-            const API_URL = "http://127.0.0.1:8000/api/balance/" + user.id;
+            const API_URL = "https://goofiness-equator-velvet.ngrok-free.dev/api/balance/" + user.id;
 
             fetch(API_URL)
                 .then(response => {
