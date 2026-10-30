@@ -4,20 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NeiroX Профиль</title>
-    <!-- Подключаем скрипт Telegram Mini Apps -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: var(--tg-theme-bg-color, #1a1a2e);
+            --bg-color: var(--tg-theme-bg-color, #0f0f1a); /* Сделали фон чуть темнее */
             --text-color: var(--tg-theme-text-color, #ffffff);
             --hint-color: var(--tg-theme-hint-color, #aaaaaa);
             --button-color: var(--tg-theme-button-color, #00aa44);
             --button-text-color: var(--tg-theme-button-text-color, #ffffff);
-            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-bg: rgba(30, 30, 46, 0.8);
         }
 
         body {
             background-color: var(--bg-color);
+            /* Добавили радиальный градиент на фон всего приложения */
+            background: radial-gradient(circle at top, #1a1a2e 0%, #0f0f1a 100%);
             color: var(--text-color);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -29,7 +30,6 @@
             box-sizing: border-box;
         }
 
-        /* Карточка профиля */
         .profile-card {
             background: var(--card-bg);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -41,32 +41,69 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             backdrop-filter: blur(10px);
             margin-top: 20px;
+            position: relative;
+            overflow: hidden;
         }
 
-        /* Аватарка */
+        /* --- МАГИЯ ЗА АВАТАРКОЙ --- */
+        .avatar-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Пульсирующее неоновое кольцо */
+        .avatar-container::before {
+            content: '';
+            position: absolute;
+            top: -5px; left: -5px; right: -5px; bottom: -5px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #00ff88, #00aaff, #ff00ff, #00ff88);
+            animation: rotate 4s linear infinite;
+            z-index: 0;
+            filter: blur(8px);
+            opacity: 0.8;
+        }
+
+        /* Второе кольцо для пульсации */
+        .avatar-container::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 50%;
+            box-shadow: 0 0 30px #00ff88;
+            animation: pulse 2s ease-in-out infinite;
+            z-index: 0;
+        }
+
         .avatar {
             width: 100px;
             height: 100px;
             border-radius: 50%;
-            border: 3px solid #00ff88;
+            border: 4px solid #111;
             object-fit: cover;
-            margin-bottom: 15px;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+            position: relative;
+            z-index: 1; /* Аватарка поверх свечения */
         }
 
-        .name {
-            font-size: 24px;
-            font-weight: bold;
-            margin: 0 0 5px 0;
+        /* Анимации */
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
+            50% { box-shadow: 0 0 50px rgba(0, 255, 136, 0.8); }
+            100% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
         }
 
-        .username {
-            font-size: 16px;
-            color: var(--hint-color);
-            margin: 0 0 20px 0;
-        }
+        .name { font-size: 24px; font-weight: bold; margin: 0 0 5px 0; }
+        .username { font-size: 16px; color: var(--hint-color); margin: 0 0 20px 0; }
 
-        /* Блок со статистикой */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -75,28 +112,18 @@
         }
 
         .stat-item {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.3);
             padding: 15px;
             border-radius: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .stat-value {
-            font-size: 22px;
-            font-weight: bold;
-            color: #f1c40f;
-        }
+        .stat-value { font-size: 22px; font-weight: bold; color: #f1c40f; }
+        .stat-label { font-size: 12px; color: var(--hint-color); text-transform: uppercase; margin-top: 5px; }
 
-        .stat-label {
-            font-size: 12px;
-            color: var(--hint-color);
-            text-transform: uppercase;
-            margin-top: 5px;
-        }
-
-        /* Кнопка */
         .btn {
             background-color: var(--button-color);
             color: var(--button-text-color);
@@ -109,48 +136,43 @@
             margin-top: 30px;
             cursor: pointer;
             transition: transform 0.2s;
+            z-index: 2;
+            position: relative;
         }
         .btn:active { transform: scale(0.95); }
 
-        /* Ошибка, если нет данных */
-        .error-msg {
-            color: #e74c3c;
-            text-align: center;
-            margin-top: 50px;
-            font-size: 18px;
-        }
+        .error-msg { color: #e74c3c; text-align: center; margin-top: 50px; font-size: 18px; }
     </style>
 </head>
 <body>
 
-    <div id="app-content">
-        <!-- Сюда JS вставит карточку профиля -->
-    </div>
+    <div id="app-content"></div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
-        tg.expand(); // Разворачиваем на весь экран
+        tg.expand();
 
         const user = tg.initDataUnsafe?.user;
         const appContent = document.getElementById('app-content');
 
         if (user) {
-            // Если пользователь есть, строим профиль
-            // Аватарка (если нет, ставим заглушку)
             const avatarUrl = user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.first_name) + '&background=00aa44&color=fff&size=200';
             
-            // Формируем HTML
             appContent.innerHTML = `
                 <div class="profile-card">
-                    <img src="${avatarUrl}" alt="Avatar" class="avatar">
+                    <!-- Обертка для аватарки с анимацией -->
+                    <div class="avatar-container">
+                        <img src="${avatarUrl}" alt="Avatar" class="avatar">
+                    </div>
+                    
                     <h1 class="name">${user.first_name}</h1>
                     <p class="username">@${user.username || 'нет_юзернейма'}</p>
                     
                     <div class="stats-grid">
                         <div class="stat-item">
-                            <span class="stat-value" id="user-id">${user.id}</span>
-                            <span class="stat-label">Telegram ID</span>
+                            <span class="stat-value" style="color: #00aaff;">${user.id}</span>
+                            <span class="stat-label">ID</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-value" style="color: #00ff88;">⭐ 0</span>
@@ -158,7 +180,7 @@
                         </div>
                         <div class="stat-item">
                             <span class="stat-value">0</span>
-                            <span class="stat-label">Игр сыграно</span>
+                            <span class="stat-label">Игр</span>
                         </div>
                         <div class="stat-item">
                             <span class="stat-value">0</span>
@@ -170,7 +192,6 @@
                 </div>
             `;
         } else {
-            // Если открыто не из Telegram
             appContent.innerHTML = `
                 <div class="error-msg">
                     ⚠️ Этот профиль доступен только внутри Telegram.<br>
