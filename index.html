@@ -222,27 +222,26 @@
             const avatarUrl = user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.first_name) + '&background=00aa44&color=fff&size=200';
             document.getElementById('user-avatar').src = avatarUrl;
 
-            // 2. ЗАПРАШИВАЕМ БАЛАНС ИЗ БД
-            // ВНИМАНИЕ: Здесь указан локальный сервер. Потом поменяешь на Render.
-            const API_URL = "https://goofiness-equator-velvet.ngrok-free.dev/api/balance/" + user.id;
+            // 2. ЗАПРАШИВАЕМ БАЛАНС ИЗ БД (С ОБХОДОМ NGROK)
+            const API_URL = "https://goofiness-equator-velvet.ngrok-free.dev/api/balance/" + user.id + "?v=" + Date.now();
 
-            fetch(API_URL)
+            fetch(API_URL, {
+                method: 'GET',
+                headers: {
+                    'ngrok-skip-browser-warning': 'true' // <-- ГЛАВНЫЙ ФИКС
+                }
+            })
                 .then(response => {
                     if (!response.ok) throw new Error("Ошибка сервера");
                     return response.json();
                 })
                 .then(data => {
-                    casinoBalance = data.balance; // Обновляем переменную
-                    
-                    // Обновляем на странице профиля
+                    casinoBalance = data.balance;
                     document.getElementById('profile-balance').innerText = '⭐ ' + casinoBalance;
-                    
-                    // Обновляем в казино
                     document.getElementById('casino-balance').innerText = casinoBalance;
                 })
                 .catch(error => {
-                    console.error("Не удалось загрузить баланс:", error);
-                    // Если сервер не работает, оставляем 1000
+                    console.error("Ошибка:", error);
                     document.getElementById('profile-balance').innerText = '⭐ 1000 (Оффлайн)';
                     document.getElementById('casino-balance').innerText = '1000';
                 });
