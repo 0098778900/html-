@@ -235,10 +235,14 @@
                     if (!response.ok) throw new Error("Ошибка сервера");
                     return response.json();
                 })
-                .then(data => {
+                                .then(data => {
                     casinoBalance = data.balance;
-                    document.getElementById('profile-balance').innerText = '⭐ ' + casinoBalance;
-                    document.getElementById('casino-balance').innerText = casinoBalance;
+                    
+                    // ФОРМАТИРУЕМ ЧИСЛО (добавляем пробелы)
+                    const formattedBalance = casinoBalance.toLocaleString('ru-RU');
+                    
+                    document.getElementById('profile-balance').innerText = '⭐ ' + formattedBalance;
+                    document.getElementById('casino-balance').innerText = formattedBalance;
                 })
                 .catch(error => {
                     console.error("Ошибка:", error);
