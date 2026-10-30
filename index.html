@@ -25,13 +25,13 @@
 
         /* Общие стили для страниц */
         .page {
-            display: none; /* По умолчанию скрыты */
+            display: none; 
             width: 100%; max-width: 400px;
             flex-direction: column; align-items: center;
             animation: fadeIn 0.3s ease-in-out;
         }
         .page.active {
-            display: flex; /* Показываем активную */
+            display: flex; 
         }
 
         @keyframes fadeIn {
@@ -167,8 +167,8 @@
                     <span class="stat-label">ID</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value" style="color: #00ff88;">⭐ 1000</span>
-                    <span class="stat-label">Баланс (Демо)</span>
+                    <span class="stat-value" id="profile-balance" style="color: #00ff88;">⭐ ...</span>
+                    <span class="stat-label">Баланс</span>
                 </div>
             </div>
 
@@ -181,7 +181,7 @@
     <div id="page-casino" class="page">
         <div class="balance-box">
             <div class="stat-label">Твой игровой баланс</div>
-            <div class="balance-value" id="casino-balance">1000</div>
+            <div class="balance-value" id="casino-balance">...</div>
         </div>
 
         <div class="slots-container">
@@ -205,27 +205,51 @@
 
         // --- НАВИГАЦИЯ ---
         function switchPage(pageId) {
-            // Скрываем все страницы
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            // Показываем нужную
             document.getElementById(pageId).classList.add('active');
         }
 
-        // --- ИНИЦИАЛИЗАЦИЯ ПРОФИЛЯ ---
+        // --- ИНИЦИАЛИЗАЦИЯ ПРОФИЛЯ И БАЛАНСА ---
         const user = tg.initDataUnsafe?.user;
+        let casinoBalance = 1000; // Дефолтное значение
+
         if (user) {
+            // 1. Заполняем профиль
             document.getElementById('user-name').innerText = user.first_name;
             document.getElementById('user-username').innerText = '@' + (user.username || 'нет_юзернейма');
             document.getElementById('user-id').innerText = user.id;
             
             const avatarUrl = user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.first_name) + '&background=00aa44&color=fff&size=200';
             document.getElementById('user-avatar').src = avatarUrl;
+
+            // 2. ЗАПРАШИВАЕМ БАЛАНС ИЗ БД
+            // ВНИМАНИЕ: Здесь указан локальный сервер. Потом поменяешь на Render.
+            const API_URL = "http://127.0.0.1:8000/api/balance/" + user.id;
+
+            fetch(API_URL)
+                .then(response => {
+                    if (!response.ok) throw new Error("Ошибка сервера");
+                    return response.json();
+                })
+                .then(data => {
+                    casinoBalance = data.balance; // Обновляем переменную
+                    
+                    // Обновляем на странице профиля
+                    document.getElementById('profile-balance').innerText = '⭐ ' + casinoBalance;
+                    
+                    // Обновляем в казино
+                    document.getElementById('casino-balance').innerText = casinoBalance;
+                })
+                .catch(error => {
+                    console.error("Не удалось загрузить баланс:", error);
+                    // Если сервер не работает, оставляем 1000
+                    document.getElementById('profile-balance').innerText = '⭐ 1000 (Оффлайн)';
+                    document.getElementById('casino-balance').innerText = '1000';
+                });
         }
 
         // --- ЛОГИКА КАЗИНО ---
-        let casinoBalance = 1000;
         let isSpinning = false;
-
         const symbols = ['🍒', '🍋', '🍊', '💎', '7️⃣', '🔔'];
         const balanceDisplay = document.getElementById('casino-balance');
         const resultText = document.getElementById('resultText');
@@ -248,6 +272,7 @@
                 return;
             }
 
+            // Списываем
             casinoBalance -= bet;
             balanceDisplay.innerText = casinoBalance;
             resultText.innerText = "";
@@ -280,6 +305,7 @@
                 reels[1].innerText = res2;
                 reels[2].innerText = res3;
 
+                // Проверка выигрыша (3 в ряд)
                 if (res1 === res2 && res2 === res3) {
                     const winAmount = bet * 3;
                     casinoBalance += winAmount;
