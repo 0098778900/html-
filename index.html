@@ -308,31 +308,24 @@
                 reels[1].innerText = res2;
                 reels[2].innerText = res3;
 
-                // Проверка выигрыша (3 в ряд)
-                if (res1 === res2 && res2 === res3) {
-                    const winAmount = bet * 3;
-                    casinoBalance += winAmount;
-                    balanceDisplay.innerText = casinoBalance;
-                    resultText.innerText = `🎉 ДЖЕКПОТ! Выигрыш: +${winAmount}`;
-                    resultText.style.color = "#f1c40f";
-                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                } else {
-                    resultText.innerText = `😢 Проигрыш: -${bet}`;
-                    resultText.style.color = "#e74c3c";
-                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-                }
-
-                isSpinning = false;
-                spinBtn.disabled = false;
-                spinBtn.style.background = "#00aa44";
-                
-                if (casinoBalance < 100) {
-                    spinBtn.disabled = true;
-                    spinBtn.style.background = "#333";
-                    resultText.innerText = "У тебя закончились деньги!";
-                }
-
-            }, 2000);
+                       // Функция для отправки нового баланса на сервер
+        function updateBalanceOnServer(userId, amount) {
+            // Ссылка на твой сервер (ngrok или Render)
+            const API_URL = "https://goofiness-equator-velvet.ngrok-free.dev/api/update_balance";
+            
+            fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true'
+                },
+                body: JSON.stringify({ user_id: userId, amount: amount })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Баланс обновлен:", data);
+            })
+            .catch(error => console.error("Ошибка обновления баланса:", error));
         }
     </script>
 </body>
