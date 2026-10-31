@@ -20,7 +20,7 @@
             margin: 0; padding: 20px;
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh; box-sizing: border-box;
-            overflow: hidden; /* Чтобы змейка не скроллила экран */
+            overflow: hidden;
         }
         .page { display: none; width: 100%; max-width: 400px; flex-direction: column; align-items: center; }
         .page.active { display: flex; }
@@ -93,10 +93,10 @@
             background: #000;
             border: 4px solid #333;
             border-radius: 10px;
-            touch-action: none; /* Отключаем скролл при свайпах */
+            touch-action: none;
             box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
         }
-        .game-over-text { font-size: 24px; color: #ff4444; font-weight: bold; margin-top: 20px; display: none; }
+        .game-over-text { font-size: 20px; color: #ff4444; font-weight: bold; margin-top: 20px; display: none; text-align: center; }
     </style>
 </head>
 <body>
@@ -152,12 +152,18 @@
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+        // Безопасная инициализация Telegram API
+        const tg = window.Telegram?.WebApp;
+        let user = null;
 
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            user = tg.initDataUnsafe?.user;
+        }
+
+        // ВСТАВЬ СЮДА СВОЮ ССЫЛКУ ОТ NGROK
         const API_BASE_URL = "https://goofiness-equator-velvet.ngrok-free.dev";
-        const user = tg.initDataUnsafe?.user;
         let casinoBalance = 1000; 
 
         // НАВИГАЦИЯ
@@ -191,10 +197,13 @@
             .catch(err => {
                 document.getElementById('profile-balance').innerText = '⭐ 1000 (Оффлайн)';
             });
+        } else {
+            document.getElementById('user-name').innerText = "Ошибка: Открой через Telegram";
         }
 
         // ОБНОВЛЕНИЕ БАЛАНСА
         function updateBalanceOnServer(userId, amount, callback) {
+            if (!userId) return;
             fetch(`${API_BASE_URL}/api/update_balance`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
@@ -212,7 +221,7 @@
         const symbols = ['🍒', '🍋', '🍊', '💎', '7️⃣', '🔔'];
         
         function spin() {
-            if (isSpinning) return;
+            if (isSpinning || !user) return;
             const bet = parseInt(document.getElementById('betAmount').value);
             if (isNaN(bet) || bet < 100 || bet > casinoBalance) return;
 
@@ -253,7 +262,7 @@
             }, 2000);
         }
 
-                // --- ЗМЕЙКА ---
+        // --- ЗМЕЙКА ---
         let snakeInterval = null;
         let snakeScore = 0;
 
@@ -271,15 +280,12 @@
             let food = {x: 10, y: 10};
             let dx = 0;
             let dy = 0;
-            
-            // Флаг, чтобы змейка не двигалась до первого нажатия
             let gameStarted = false; 
 
             snakeScore = 0;
             document.getElementById('snake-score').innerText = snakeScore;
             document.getElementById('snake-gameover').style.display = 'none';
 
-            // Управление (клавиатура)
             document.onkeydown = (e) => {
                 if (e.key === 'ArrowUp' && dy !== 1) { dx = 0; dy = -1; gameStarted = true; }
                 if (e.key === 'ArrowDown' && dy !== -1) { dx = 0; dy = 1; gameStarted = true; }
@@ -287,7 +293,6 @@
                 if (e.key === 'ArrowRight' && dx !== -1) { dx = 1; dy = 0; gameStarted = true; }
             };
 
-            // Управление (свайпы)
             let touchStartX = 0, touchStartY = 0;
             canvas.addEventListener('touchstart', e => {
                 touchStartX = e.touches[0].clientX;
@@ -311,17 +316,15 @@
             if (snakeInterval) clearInterval(snakeInterval);
             
             snakeInterval = setInterval(() => {
-                if (!gameStarted) return; // Ждем первого нажатия
+                if (!gameStarted) return; 
 
                 const head = {x: snake[0].x + dx, y: snake[0].y + dy};
 
-                // Столкновение со стенами
                 if (head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize) {
                     gameOverSnake();
                     return;
                 }
 
-                // Столкновение с собой
                 for (let i = 0; i < snake.length; i++) {
                     if (snake[i].x === head.x && snake[i].y === head.y) {
                         gameOverSnake();
@@ -331,7 +334,6 @@
 
                 snake.unshift(head);
 
-                // Поедание еды
                 if (head.x === food.x && head.y === food.y) {
                     snakeScore += 10;
                     document.getElementById('snake-score').innerText = snakeScore;
@@ -343,17 +345,14 @@
                     snake.pop();
                 }
 
-                // Отрисовка
                 ctx.fillStyle = '#000';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Еда
                 ctx.fillStyle = '#ff4444';
                 ctx.beginPath();
                 ctx.arc(food.x * cellSize + cellSize/2, food.y * cellSize + cellSize/2, cellSize/2 - 1, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Змейка
                 ctx.fillStyle = '#00ff88';
                 snake.forEach((part) => {
                     ctx.fillRect(part.x * cellSize + 1, part.y * cellSize + 1, cellSize - 2, cellSize - 2);
@@ -365,15 +364,13 @@
             clearInterval(snakeInterval);
             document.getElementById('snake-gameover').style.display = 'block';
             
-            // Награда: каждые 10 очков игры = 5 очков баланса
             let botReward = Math.floor(snakeScore / 10) * 5;
             
             document.getElementById('snake-final-score').innerText = 
                 `Твой счет: ${snakeScore}\nНачислено очков: +${botReward} ⭐`;
 
-            if (botReward > 0) {
+            if (botReward > 0 && user) {
                 updateBalanceOnServer(user.id, botReward, () => {
-                    // Обновляем баланс на экране после начисления
                     fetch(`${API_BASE_URL}/api/balance/${user.id}?v=${Date.now()}`, {
                         headers: { 'ngrok-skip-browser-warning': 'true' }
                     })
@@ -389,7 +386,6 @@
 
         function stopSnakeGame() {
             if (snakeInterval) clearInterval(snakeInterval);
-        }
         }
     </script>
 </body>
