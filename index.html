@@ -253,7 +253,7 @@
             }, 2000);
         }
 
-        // --- ЗМЕЙКА ---
+                // --- ЗМЕЙКА ---
         let snakeInterval = null;
         let snakeScore = 0;
 
@@ -271,19 +271,23 @@
             let food = {x: 10, y: 10};
             let dx = 0;
             let dy = 0;
+            
+            // Флаг, чтобы змейка не двигалась до первого нажатия
+            let gameStarted = false; 
+
             snakeScore = 0;
             document.getElementById('snake-score').innerText = snakeScore;
             document.getElementById('snake-gameover').style.display = 'none';
 
-            // Управление
+            // Управление (клавиатура)
             document.onkeydown = (e) => {
-                if (e.key === 'ArrowUp' && dy === 0) { dx = 0; dy = -1; }
-                if (e.key === 'ArrowDown' && dy === 0) { dx = 0; dy = 1; }
-                if (e.key === 'ArrowLeft' && dx === 0) { dx = -1; dy = 0; }
-                if (e.key === 'ArrowRight' && dx === 0) { dx = 1; dy = 0; }
+                if (e.key === 'ArrowUp' && dy !== 1) { dx = 0; dy = -1; gameStarted = true; }
+                if (e.key === 'ArrowDown' && dy !== -1) { dx = 0; dy = 1; gameStarted = true; }
+                if (e.key === 'ArrowLeft' && dx !== 1) { dx = -1; dy = 0; gameStarted = true; }
+                if (e.key === 'ArrowRight' && dx !== -1) { dx = 1; dy = 0; gameStarted = true; }
             };
 
-            // Свайпы для телефона
+            // Управление (свайпы)
             let touchStartX = 0, touchStartY = 0;
             canvas.addEventListener('touchstart', e => {
                 touchStartX = e.touches[0].clientX;
@@ -296,17 +300,18 @@
                 let diffY = touchEndY - touchStartY;
 
                 if (Math.abs(diffX) > Math.abs(diffY)) {
-                    if (diffX > 0 && dx === 0) { dx = 1; dy = 0; } // Swipe Right
-                    else if (diffX < 0 && dx === 0) { dx = -1; dy = 0; } // Swipe Left
+                    if (diffX > 0 && dx !== -1) { dx = 1; dy = 0; gameStarted = true; }
+                    else if (diffX < 0 && dx !== 1) { dx = -1; dy = 0; gameStarted = true; }
                 } else {
-                    if (diffY > 0 && dy === 0) { dx = 0; dy = 1; } // Swipe Down
-                    else if (diffY < 0 && dy === 0) { dx = 0; dy = -1; } // Swipe Up
+                    if (diffY > 0 && dy !== -1) { dx = 0; dy = 1; gameStarted = true; }
+                    else if (diffY < 0 && dy !== 1) { dx = 0; dy = -1; gameStarted = true; }
                 }
             });
 
             if (snakeInterval) clearInterval(snakeInterval);
+            
             snakeInterval = setInterval(() => {
-                if (dx === 0 && dy === 0) return; // Ждем первого хода
+                if (!gameStarted) return; // Ждем первого нажатия
 
                 const head = {x: snake[0].x + dx, y: snake[0].y + dy};
 
@@ -350,28 +355,41 @@
 
                 // Змейка
                 ctx.fillStyle = '#00ff88';
-                snake.forEach((part, i) => {
+                snake.forEach((part) => {
                     ctx.fillRect(part.x * cellSize + 1, part.y * cellSize + 1, cellSize - 2, cellSize - 2);
                 });
-            }, 150); // Скорость змейки (150мс)
+            }, 150); 
         }
 
         function gameOverSnake() {
             clearInterval(snakeInterval);
             document.getElementById('snake-gameover').style.display = 'block';
-            document.getElementById('snake-final-score').innerText = `Твой счет: ${snakeScore}. Начислено очков: ${snakeScore / 10}`;
+            
+            // Награда: каждые 10 очков игры = 5 очков баланса
+            let botReward = Math.floor(snakeScore / 10) * 5;
+            
+            document.getElementById('snake-final-score').innerText = 
+                `Твой счет: ${snakeScore}\nНачислено очков: +${botReward} ⭐`;
 
-            // Начисляем очки (10 очков игры = 1 очко бота)
-            if (snakeScore > 0) {
-                let botReward = Math.floor(snakeScore / 10);
-                if (botReward > 0) {
-                    updateBalanceOnServer(user.id, botReward);
-                }
+            if (botReward > 0) {
+                updateBalanceOnServer(user.id, botReward, () => {
+                    // Обновляем баланс на экране после начисления
+                    fetch(`${API_BASE_URL}/api/balance/${user.id}?v=${Date.now()}`, {
+                        headers: { 'ngrok-skip-browser-warning': 'true' }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        casinoBalance = data.balance;
+                        document.getElementById('profile-balance').innerText = '⭐ ' + casinoBalance.toLocaleString('ru-RU');
+                        document.getElementById('casino-balance').innerText = casinoBalance.toLocaleString('ru-RU');
+                    });
+                });
             }
         }
 
         function stopSnakeGame() {
             if (snakeInterval) clearInterval(snakeInterval);
+        }
         }
     </script>
 </body>
