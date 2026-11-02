@@ -3,100 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NeiroX App</title>
+    <title>NeiroX Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Подключаем современный шрифт -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: var(--tg-theme-bg-color, #0f0f1a);
-            --text-color: var(--tg-theme-text-color, #ffffff);
-            --hint-color: var(--tg-theme-hint-color, #aaaaaa);
-            --card-bg: rgba(30, 30, 46, 0.8);
-            --accent: #f1c40f;
+            --bg-dark: #050510;
+            --bg-card: rgba(20, 20, 35, 0.6);
+            --accent: #00ff88;
+            --accent-glow: rgba(0, 255, 136, 0.3);
+            --gold: #f1c40f;
+            --text-main: #ffffff;
+            --text-dim: #8a8a9d;
+            --border-color: rgba(255, 255, 255, 0.08);
         }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
-            background: radial-gradient(circle at top, #1a1a2e 0%, #0f0f1a 100%);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            margin: 0; padding: 20px;
-            display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; box-sizing: border-box;
+            background: radial-gradient(circle at top left, #1a1a3a, var(--bg-dark));
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+            transition: background 0.5s ease;
+        }
+
+        /* Утилиты для страниц */
+        .page {
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeSlideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        .page.active { display: flex; }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- ПРОФИЛЬ --- */
+        .profile-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px 25px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            position: relative;
             overflow: hidden;
         }
-        .page { display: none; width: 100%; max-width: 400px; flex-direction: column; align-items: center; }
-        .page.active { display: flex; }
+
+        /* Свечение за карточкой */
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent, var(--accent), transparent 30%);
+            animation: rotate 6s linear infinite;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            margin: 0 auto 20px;
+        }
         
-        /* Профиль */
-        .profile-card {
-            background: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px; padding: 30px 20px; width: 100%; text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
+        .avatar-wrapper::after {
+            content: '';
+            position: absolute;
+            inset: -5px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--accent), #00aaff);
+            z-index: -1;
+            filter: blur(10px);
+            opacity: 0.8;
         }
-        .avatar-container {
-            position: relative; width: 120px; height: 120px; margin: 0 auto 15px auto;
-            display: flex; justify-content: center; align-items: center;
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid var(--bg-dark);
+            object-fit: cover;
+            background: #111;
         }
-        .avatar-container::before {
-            content: ''; position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px;
-            border-radius: 50%; background: conic-gradient(from 0deg, #00ff88, #00aaff, #ff00ff, #00ff88);
-            animation: rotate 4s linear infinite; z-index: 0; filter: blur(8px); opacity: 0.8;
+
+        .name { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .username { font-size: 15px; color: var(--text-dim); font-weight: 500; margin-bottom: 25px; }
+        .username span { color: var(--accent); }
+
+        .stats-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
         }
-        .avatar-container::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 50%; box-shadow: 0 0 30px #00ff88; animation: pulse 2s ease-in-out infinite; z-index: 0;
+        
+        .stat-box {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.2s;
         }
-        @keyframes rotate { 100% { transform: rotate(360deg); } }
-        @keyframes pulse { 0% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); } 50% { box-shadow: 0 0 50px rgba(0, 255, 136, 0.8); } 100% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); } }
-        .avatar { width: 100px; height: 100px; border-radius: 50%; border: 4px solid #111; object-fit: cover; position: relative; z-index: 1; }
-        .name { font-size: 24px; font-weight: bold; margin: 0 0 5px 0; }
-        .username { font-size: 16px; color: var(--hint-color); margin: 0 0 20px 0; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .stat-item {
-            background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 12px;
-            display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(255,255,255,0.05);
-        }
-        .stat-value { font-size: 22px; font-weight: bold; color: var(--accent); }
-        .stat-label { font-size: 12px; color: var(--hint-color); text-transform: uppercase; margin-top: 5px; }
+        .stat-box:active { transform: scale(0.97); }
+
+        .stat-value { font-size: 20px; font-weight: 800; color: var(--accent); }
+        .stat-value.gold { color: var(--gold); }
+        .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-top: 5px; font-weight: 600; }
+
+        /* Кнопки */
         .btn {
-            background-color: #00aa44; color: white; border: none; padding: 15px;
-            border-radius: 12px; font-size: 16px; font-weight: bold; width: 100%;
-            margin-top: 20px; cursor: pointer; transition: transform 0.2s; text-transform: uppercase;
+            width: 100%;
+            padding: 18px;
+            border-radius: 16px;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
         }
-        .btn:active { transform: scale(0.95); }
-        .btn-back { background-color: #333; margin-top: 10px; }
 
-        /* Казино */
-        .balance-box {
-            background: rgba(0, 0, 0, 0.6); padding: 15px 30px; border-radius: 15px;
-            border: 2px solid var(--accent); box-shadow: 0 0 20px rgba(241, 196, 15, 0.2);
-            text-align: center; margin-bottom: 20px; width: 100%; box-sizing: border-box;
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff88, #00aa44);
+            color: #000;
+            box-shadow: 0 10px 20px var(--accent-glow);
         }
-        .balance-value { font-size: 36px; font-weight: bold; color: var(--accent); text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); }
-        .slots-container {
-            display: flex; gap: 10px; background: #111; padding: 20px; border-radius: 20px;
-            border: 4px solid #333; box-shadow: inset 0 0 30px rgba(0,0,0,0.8); margin-bottom: 20px;
+        .btn-primary:active { transform: scale(0.96); box-shadow: 0 5px 10px var(--accent-glow); }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.05);
+            color: white;
+            border: 1px solid var(--border-color);
         }
+        .btn-secondary:active { background: rgba(255,255,255,0.1); transform: scale(0.96); }
+
+        .btn-close {
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 14px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        /* --- КАЗИНО --- */
+        .balance-display {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .balance-display .label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
+        .balance-display .value { font-size: 48px; font-weight: 800; color: var(--gold); text-shadow: 0 0 20px rgba(241, 196, 15, 0.4); line-height: 1; margin-top: 5px; }
+        .balance-display .value span { font-size: 24px; }
+
+        .slots-machine {
+            background: rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 25px 15px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 30px;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        }
+
         .reel {
-            width: 80px; height: 100px; background: #222; border-radius: 10px;
-            display: flex; justify-content: center; align-items: center; font-size: 50px; border: 2px solid #444;
+            flex: 1;
+            aspect-ratio: 1;
+            background: #fff;
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 45px;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.2), 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
         }
-        .reel.spinning { animation: spin 0.2s linear infinite; }
-        @keyframes spin { 0% { transform: translateY(-10px); } 50% { transform: translateY(10px); } 100% { transform: translateY(-10px); } }
-        .bet-input {
-            width: 100%; padding: 15px; font-size: 20px; background: #000;
-            border: 2px solid #555; color: var(--accent); border-radius: 10px;
-            text-align: center; box-sizing: border-box; font-weight: bold; margin-bottom: 15px;
+        .reel::after {
+            content: '';
+            position: absolute; inset: 0;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
         }
-        .result-text { text-align: center; font-size: 20px; font-weight: bold; height: 30px; margin-top: 20px; text-shadow: 0 0 10px currentColor; }
+        .reel.spinning { animation: blur 0.2s linear infinite; }
+        @keyframes blur {
+            0% { transform: translateY(-5px); filter: blur(1px); }
+            50% { transform: translateY(5px); filter: blur(2px); }
+            100% { transform: translateY(-5px); filter: blur(1px); }
+        }
 
-        /* Змейка */
+        .bet-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .bet-input {
+            width: 40%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            padding: 15px;
+            outline: none;
+        }
+        .bet-input:focus { border-color: var(--accent); }
+
+        .spin-btn {
+            flex: 1;
+            background: linear-gradient(135deg, #f1c40f, #d4ac0d);
+            color: #000;
+            font-size: 18px;
+            border-radius: 16px;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(241, 196, 15, 0.2);
+            transition: 0.2s;
+        }
+        .spin-btn:active { transform: scale(0.95); }
+        .spin-btn:disabled { background: #333; color: #666; box-shadow: none; }
+
+        .result-msg {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            min-height: 25px;
+            margin-top: 10px;
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        /* --- ЗМЕЙКА --- */
+        .snake-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .snake-score { font-size: 20px; font-weight: 800; color: var(--accent); }
+
         #snake-canvas {
             background: #000;
-            border: 4px solid #333;
-            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.15), inset 0 0 20px rgba(0,0,0,0.8);
             touch-action: none;
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
         }
-        .game-over-text { font-size: 20px; color: #ff4444; font-weight: bold; margin-top: 20px; display: none; text-align: center; }
+
+        .game-over {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(5px);
+            border-radius: 20px;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        .game-over h2 { color: #ff4444; font-size: 28px; margin-bottom: 10px; }
+        .game-over p { color: var(--text-dim); margin-bottom: 20px; text-align: center; }
+        .game-over .score { font-size: 36px; color: var(--gold); font-weight: 800; margin-bottom: 20px; }
+        
+        .btn-restart {
+            background: var(--accent);
+            color: #000;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Сетка для змейки */
+        .snake-wrapper {
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -104,55 +320,78 @@
     <!-- ПРОФИЛЬ -->
     <div id="page-profile" class="page active">
         <div class="profile-card">
-            <div class="avatar-container">
+            <div class="avatar-wrapper">
                 <img src="" alt="Avatar" class="avatar" id="user-avatar">
             </div>
             <h1 class="name" id="user-name">Загрузка...</h1>
-            <p class="username" id="user-username">@...</p>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="stat-value" style="color: #00aaff;" id="user-id">...</span>
+            <p class="username">@<span id="user-username">username</span></p>
+            
+            <div class="stats-row">
+                <div class="stat-box">
+                    <span class="stat-value" id="user-id">...</span>
                     <span class="stat-label">ID</span>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-value" id="profile-balance" style="color: #00ff88;">⭐ ...</span>
+                <div class="stat-box">
+                    <span class="stat-value gold" id="profile-balance">⭐ ...</span>
                     <span class="stat-label">Баланс</span>
                 </div>
             </div>
-            <button class="btn" onclick="switchPage('page-casino')">Перейти в Казино 🎰</button>
-            <button class="btn" onclick="startSnake()">Играть в Змейку 🐍</button>
-            <button class="btn btn-back" onclick="tg.close()">Закрыть</button>
+
+            <button class="btn btn-primary" onclick="switchPage('page-casino')">
+                🎰 Перейти в Казино
+            </button>
+            <button class="btn btn-secondary" onclick="switchPage('page-snake')">
+                🐍 Играть в Змейку
+            </button>
+            
+            <button class="btn btn-close" onclick="tg.close()">Закрыть</button>
         </div>
     </div>
 
     <!-- КАЗИНО -->
     <div id="page-casino" class="page">
-        <div class="balance-box">
-            <div class="stat-label">Твой игровой баланс</div>
-            <div class="balance-value" id="casino-balance">...</div>
+        <div class="balance-display" style="width: 100%;">
+            <div class="label">Твой баланс</div>
+            <div class="value" id="casino-balance">0<span> ⭐</span></div>
         </div>
-        <div class="slots-container">
+
+        <div class="slots-machine">
             <div class="reel" id="reel1">🍒</div>
             <div class="reel" id="reel2">🍋</div>
             <div class="reel" id="reel3">💎</div>
         </div>
-        <input type="number" id="betAmount" class="bet-input" value="100" min="100" step="50">
-        <button class="btn" id="spinBtn" onclick="spin()">КРУТИТЬ 🎰</button>
-        <div class="result-text" id="resultText"></div>
-        <button class="btn btn-back" onclick="switchPage('page-profile')">⬅ Назад в профиль</button>
+
+        <div class="bet-controls">
+            <input type="number" id="betAmount" class="bet-input" value="100" min="100" step="50">
+            <button class="spin-btn" id="spinBtn" onclick="spin()">КРУТИТЬ</button>
+        </div>
+
+        <div class="result-msg" id="resultText"></div>
+
+        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="switchPage('page-profile')">⬅ Назад</button>
     </div>
 
     <!-- ЗМЕЙКА -->
     <div id="page-snake" class="page">
-        <h2 style="color: #00ff88; margin-bottom: 10px;">🐍 Змейка</h2>
-        <div style="color: #aaa; margin-bottom: 10px;">Счет: <span id="snake-score" style="color: white; font-weight: bold;">0</span></div>
-        <canvas id="snake-canvas" width="300" height="300"></canvas>
-        <div id="snake-gameover" class="game-over-text">Игра окончена!<br><span id="snake-final-score" style="color: white;"></span></div>
-        <button class="btn btn-back" onclick="switchPage('page-profile')">⬅ Назад в профиль</button>
+        <div class="snake-header">
+            <h2 style="font-size: 20px;">🐍 Змейка</h2>
+            <div class="snake-score">Счёт: <span id="snake-score">0</span></div>
+        </div>
+
+        <div class="snake-wrapper">
+            <canvas id="snake-canvas" width="320" height="320"></canvas>
+            <div id="snake-gameover" class="game-over">
+                <h2>GAME OVER</h2>
+                <p>Твой результат</p>
+                <div class="score" id="snake-final-score">0</div>
+                <button class="btn-restart" onclick="restartSnake()">Играть снова</button>
+            </div>
+        </div>
+
+        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="switchPage('page-profile')">⬅ Назад</button>
     </div>
 
     <script>
-        // Безопасная инициализация Telegram API
         const tg = window.Telegram?.WebApp;
         let user = null;
 
@@ -164,12 +403,14 @@
 
         // ВСТАВЬ СЮДА СВОЮ ССЫЛКУ ОТ NGROK
         const API_BASE_URL = "https://goofiness-equator-velvet.ngrok-free.dev";
-        let casinoBalance = 1000; 
+        let casinoBalance = 0; 
 
-        // НАВИГАЦИЯ
+        // Навигация с эффектом
         function switchPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
+            const newPage = document.getElementById(pageId);
+            newPage.classList.add('active');
+            
             if (pageId === 'page-snake') {
                 document.getElementById('snake-gameover').style.display = 'none';
                 startSnakeGame();
@@ -178,12 +419,12 @@
             }
         }
 
-        // ЗАГРУЗКА ПРОФИЛЯ
+        // Загрузка профиля
         if (user) {
             document.getElementById('user-name').innerText = user.first_name;
-            document.getElementById('user-username').innerText = '@' + (user.username || 'нет_юзернейма');
+            document.getElementById('user-username').innerText = user.username || 'нет_юзернейма';
             document.getElementById('user-id').innerText = user.id;
-            document.getElementById('user-avatar').src = user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.first_name) + '&background=00aa44&color=fff&size=200';
+            document.getElementById('user-avatar').src = user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.first_name) + '&background=00ff88&color=000&size=200';
 
             fetch(`${API_BASE_URL}/api/balance/${user.id}?v=${Date.now()}`, {
                 headers: { 'ngrok-skip-browser-warning': 'true' }
@@ -191,17 +432,21 @@
             .then(res => res.json())
             .then(data => {
                 casinoBalance = data.balance;
-                document.getElementById('profile-balance').innerText = '⭐ ' + casinoBalance.toLocaleString('ru-RU');
-                document.getElementById('casino-balance').innerText = casinoBalance.toLocaleString('ru-RU');
+                updateAllBalances();
             })
             .catch(err => {
-                document.getElementById('profile-balance').innerText = '⭐ 1000 (Оффлайн)';
+                document.getElementById('profile-balance').innerText = '⭐ Оффлайн';
             });
         } else {
-            document.getElementById('user-name').innerText = "Ошибка: Открой через Telegram";
+            document.getElementById('user-name').innerText = "Ошибка доступа";
         }
 
-        // ОБНОВЛЕНИЕ БАЛАНСА
+        function updateAllBalances() {
+            const formatted = casinoBalance.toLocaleString('ru-RU');
+            document.getElementById('profile-balance').innerText = `⭐ ${formatted}`;
+            document.getElementById('casino-balance').innerHTML = `${formatted}<span> ⭐</span>`;
+        }
+
         function updateBalanceOnServer(userId, amount, callback) {
             if (!userId) return;
             fetch(`${API_BASE_URL}/api/update_balance`, {
@@ -210,9 +455,7 @@
                 body: JSON.stringify({ user_id: userId, amount: amount })
             })
             .then(res => res.json())
-            .then(data => {
-                if(callback) callback();
-            })
+            .then(() => { if(callback) callback(); })
             .catch(err => console.error("Ошибка:", err));
         }
 
@@ -226,12 +469,16 @@
             if (isNaN(bet) || bet < 100 || bet > casinoBalance) return;
 
             casinoBalance -= bet;
-            document.getElementById('casino-balance').innerText = casinoBalance.toLocaleString('ru-RU');
+            updateAllBalances();
+            
             isSpinning = true;
             document.getElementById('spinBtn').disabled = true;
 
             const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
-            reels.forEach(r => r.classList.add('spinning'));
+            reels.forEach(r => {
+                r.classList.add('spinning');
+                r.style.background = '#fff';
+            });
 
             const spinInterval = setInterval(() => {
                 reels.forEach(r => r.innerText = symbols[Math.floor(Math.random() * symbols.length)]);
@@ -240,23 +487,31 @@
             setTimeout(() => {
                 clearInterval(spinInterval);
                 reels.forEach(r => r.classList.remove('spinning'));
+                
                 const res1 = symbols[Math.floor(Math.random() * symbols.length)];
                 const res2 = symbols[Math.floor(Math.random() * symbols.length)];
                 const res3 = symbols[Math.floor(Math.random() * symbols.length)];
-                reels[0].innerText = res1; reels[1].innerText = res2; reels[2].innerText = res3;
+                
+                reels[0].innerText = res1; 
+                reels[1].innerText = res2; 
+                reels[2].innerText = res3;
 
                 if (res1 === res2 && res2 === res3) {
                     const win = bet * 3;
                     casinoBalance += win;
-                    document.getElementById('resultText').innerText = `🎉 ДЖЕКПОТ! +${win}`;
+                    
+                    // Подсветка выигрыша
+                    reels.forEach(r => r.style.background = '#00ff88');
+                    
+                    document.getElementById('resultText').innerText = `ДЖЕКПОТ! +${win} ⭐`;
                     document.getElementById('resultText').style.color = "#f1c40f";
-                    updateBalanceOnServer(user.id, win);
+                    updateBalanceOnServer(user.id, win, updateAllBalances);
                 } else {
-                    document.getElementById('resultText').innerText = `😢 Проигрыш: -${bet}`;
-                    document.getElementById('resultText').style.color = "#e74c3c";
-                    updateBalanceOnServer(user.id, -bet);
+                    document.getElementById('resultText').innerText = `Проигрыш: -${bet} ⭐`;
+                    document.getElementById('resultText').style.color = "#ff4444";
+                    updateBalanceOnServer(user.id, -bet, updateAllBalances);
                 }
-                document.getElementById('casino-balance').innerText = casinoBalance.toLocaleString('ru-RU');
+                
                 isSpinning = false;
                 document.getElementById('spinBtn').disabled = false;
             }, 2000);
@@ -266,26 +521,21 @@
         let snakeInterval = null;
         let snakeScore = 0;
 
-        function startSnake() {
-            switchPage('page-snake');
-        }
-
         function startSnakeGame() {
             const canvas = document.getElementById('snake-canvas');
             const ctx = canvas.getContext('2d');
-            const gridSize = 15;
+            const gridSize = 16; // Четное число для ровных пикселей
             const cellSize = canvas.width / gridSize;
 
-            let snake = [{x: 5, y: 5}];
-            let food = {x: 10, y: 10};
+            let snake = [{x: 8, y: 8}];
+            let food = {x: 12, y: 8};
             let dx = 0;
             let dy = 0;
             let gameStarted = false; 
 
             snakeScore = 0;
             document.getElementById('snake-score').innerText = snakeScore;
-            document.getElementById('snake-gameover').style.display = 'none';
-
+            
             document.onkeydown = (e) => {
                 if (e.key === 'ArrowUp' && dy !== 1) { dx = 0; dy = -1; gameStarted = true; }
                 if (e.key === 'ArrowDown' && dy !== -1) { dx = 0; dy = 1; gameStarted = true; }
@@ -299,11 +549,8 @@
                 touchStartY = e.touches[0].clientY;
             });
             canvas.addEventListener('touchend', e => {
-                let touchEndX = e.changedTouches[0].clientX;
-                let touchEndY = e.changedTouches[0].clientY;
-                let diffX = touchEndX - touchStartX;
-                let diffY = touchEndY - touchStartY;
-
+                let diffX = e.changedTouches[0].clientX - touchStartX;
+                let diffY = e.changedTouches[0].clientY - touchStartY;
                 if (Math.abs(diffX) > Math.abs(diffY)) {
                     if (diffX > 0 && dx !== -1) { dx = 1; dy = 0; gameStarted = true; }
                     else if (diffX < 0 && dx !== 1) { dx = -1; dy = 0; gameStarted = true; }
@@ -315,21 +562,17 @@
 
             if (snakeInterval) clearInterval(snakeInterval);
             
+            // Отрисовка стартового кадра
+            drawSnake(ctx, canvas, snake, food, cellSize);
+
             snakeInterval = setInterval(() => {
                 if (!gameStarted) return; 
 
                 const head = {x: snake[0].x + dx, y: snake[0].y + dy};
 
-                if (head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize) {
-                    gameOverSnake();
-                    return;
-                }
-
+                if (head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize) return gameOverSnake();
                 for (let i = 0; i < snake.length; i++) {
-                    if (snake[i].x === head.x && snake[i].y === head.y) {
-                        gameOverSnake();
-                        return;
-                    }
+                    if (snake[i].x === head.x && snake[i].y === head.y) return gameOverSnake();
                 }
 
                 snake.unshift(head);
@@ -337,37 +580,61 @@
                 if (head.x === food.x && head.y === food.y) {
                     snakeScore += 10;
                     document.getElementById('snake-score').innerText = snakeScore;
-                    food = {
-                        x: Math.floor(Math.random() * gridSize),
-                        y: Math.floor(Math.random() * gridSize)
-                    };
+                    
+                    // Генерируем еду не на змейке
+                    let newFood;
+                    do {
+                        newFood = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
+                    } while (snake.some(s => s.x === newFood.x && s.y === newFood.y));
+                    food = newFood;
+                    
                 } else {
                     snake.pop();
                 }
 
-                ctx.fillStyle = '#000';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = '#ff4444';
-                ctx.beginPath();
-                ctx.arc(food.x * cellSize + cellSize/2, food.y * cellSize + cellSize/2, cellSize/2 - 1, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.fillStyle = '#00ff88';
-                snake.forEach((part) => {
-                    ctx.fillRect(part.x * cellSize + 1, part.y * cellSize + 1, cellSize - 2, cellSize - 2);
-                });
+                drawSnake(ctx, canvas, snake, food, cellSize);
             }, 150); 
+        }
+
+        function drawSnake(ctx, canvas, snake, food, cellSize) {
+            ctx.fillStyle = '#050510';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Еда (свечение)
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ff4444';
+            ctx.fillStyle = '#ff4444';
+            ctx.beginPath();
+            ctx.arc(food.x * cellSize + cellSize/2, food.y * cellSize + cellSize/2, cellSize/2 - 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Змейка (градиент)
+            snake.forEach((part, index) => {
+                const isHead = index === 0;
+                ctx.fillStyle = isHead ? '#00ff88' : '#00aa44';
+                ctx.shadowBlur = isHead ? 15 : 5;
+                ctx.shadowColor = '#00ff88';
+                
+                // Скругленные квадратики
+                const x = part.x * cellSize + 1;
+                const y = part.y * cellSize + 1;
+                const w = cellSize - 2;
+                const r = 4; // радиус скругления
+                
+                ctx.beginPath();
+                ctx.roundRect(x, y, w, w, r);
+                ctx.fill();
+            });
+            ctx.shadowBlur = 0;
         }
 
         function gameOverSnake() {
             clearInterval(snakeInterval);
-            document.getElementById('snake-gameover').style.display = 'block';
+            document.getElementById('snake-gameover').style.display = 'flex';
             
             let botReward = Math.floor(snakeScore / 10) * 5;
-            
-            document.getElementById('snake-final-score').innerText = 
-                `Твой счет: ${snakeScore}\nНачислено очков: +${botReward} ⭐`;
+            document.getElementById('snake-final-score').innerText = `+${botReward} ⭐`;
 
             if (botReward > 0 && user) {
                 updateBalanceOnServer(user.id, botReward, () => {
@@ -377,11 +644,15 @@
                     .then(res => res.json())
                     .then(data => {
                         casinoBalance = data.balance;
-                        document.getElementById('profile-balance').innerText = '⭐ ' + casinoBalance.toLocaleString('ru-RU');
-                        document.getElementById('casino-balance').innerText = casinoBalance.toLocaleString('ru-RU');
+                        updateAllBalances();
                     });
                 });
             }
+        }
+
+        function restartSnake() {
+            document.getElementById('snake-gameover').style.display = 'none';
+            startSnakeGame();
         }
 
         function stopSnakeGame() {
