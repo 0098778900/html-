@@ -162,21 +162,29 @@
         .snake-header { display: flex; justify-content: space-between; width: 100%; margin-bottom: 15px; }
         .snake-score { font-size: 20px; font-weight: 800; color: var(--accent); }
 
-               /* Шутер */
+        /* Шутер */
         #shooter-canvas {
-            width: 100%; height: auto; display: block;
-            background: #0a0b1a; border: 2px solid #00ff88; border-radius: 12px;
-            touch-action: none; max-width: 100%; margin-top: 28px;
+            width: 100%; 
+            height: 70vh; /* УВЕЛИЧЕННАЯ ВЫСОТА */
+            display: block;
+            background: #0a0b1a; 
+            border: 2px solid #00ff88; 
+            border-radius: 12px;
+            touch-action: none; 
+            margin-top: 25px;
+            object-fit: fill; /* Растягивает картинку */
         }
+        
         .shooter-ui-top {
-            position: absolute; top: 8px; left: 8px; color: #00ff88; font-size: 9px;
+            position: absolute; top: 30px; left: 10px; color: #00ff88; font-size: 10px;
             z-index: 10; line-height: 1.5; font-family: 'Press Start 2P', monospace;
             pointer-events: none; text-shadow: 1px 1px 0 #000;
         }
+        
         #shooter-overlay {
             position: absolute; inset: 0; background: rgba(5,5,16,0.96); display: none;
             flex-direction: column; justify-content: flex-start; align-items: center;
-            border-radius: 12px; padding: 8px; overflow-y: auto;
+            border-radius: 12px; padding: 8px; overflow-y: auto; margin-top: 25px;
         }
         #shooter-overlay::-webkit-scrollbar { width: 4px; }
         #shooter-overlay::-webkit-scrollbar-thumb { background: #00ff88; border-radius: 2px; }
@@ -301,8 +309,8 @@
             <h2 style="font-size: 16px;">🚀 Шутер</h2>
             <div style="font-size: 14px; font-weight: 800; color: var(--gold);">$<span id="shooter-money-display">0</span></div>
         </div>
-            <div style="position: relative; width: 100%; margin-top: 10px;">
-                <div class="shooter-ui-top">
+        <div style="position: relative; width: 100%;">
+            <div class="shooter-ui-top">
                 СЧЕТ: <span id="shooter-score">0</span><br>ВОЛНА: <span id="shooter-wave">1</span>
             </div>
             <canvas id="shooter-canvas" width="800" height="600"></canvas>
@@ -643,9 +651,9 @@
         function stopSnakeGame() { if (snakeInterval) clearInterval(snakeInterval); }
 
         // ==================== КОСМИЧЕСКИЙ ШУТЕР ====================
-        // АВТОНОМНАЯ ЭКОНОМИКА: $ в localStorage, НЕ трогает звёзды бота
         
         let sCanvas, sCtx;
+        let sWidth = 800, sHeight = 600; // Базовые размеры логики
         let sScore = 0, sWave = 1;
         let sMoney = parseInt(localStorage.getItem('shooter_money')) || 0;
         let sAchievements = JSON.parse(localStorage.getItem('shooter_achievements')) || [];
@@ -675,36 +683,39 @@
             sCtx.imageSmoothingEnabled = false;
             shooterApplyShipStats();
             shooterUpdateUI();
+            
+            // Обработка мыши и тача
             sCanvas.addEventListener('mousedown', () => sIsMouseDown = true);
             sCanvas.addEventListener('mouseup', () => sIsMouseDown = false);
             sCanvas.addEventListener('mousemove', (e) => {
                 const r = sCanvas.getBoundingClientRect();
-                sMouseX = (e.clientX - r.left) * (800 / r.width);
-                sMouseY = (e.clientY - r.top) * (600 / r.height);
+                sMouseX = (e.clientX - r.left) * (sWidth / r.width);
+                sMouseY = (e.clientY - r.top) * (sHeight / r.height);
             });
             sCanvas.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 sIsMouseDown = true;
                 const r = sCanvas.getBoundingClientRect();
-                sMouseX = (e.touches[0].clientX - r.left) * (800 / r.width);
-                sMouseY = (e.touches[0].clientY - r.top) * (600 / r.height);
+                sMouseX = (e.touches[0].clientX - r.left) * (sWidth / r.width);
+                sMouseY = (e.touches[0].clientY - r.top) * (sHeight / r.height);
             }, {passive:false});
             sCanvas.addEventListener('touchend', (e) => { e.preventDefault(); sIsMouseDown = false; }, {passive:false});
             sCanvas.addEventListener('touchmove', (e) => {
                 e.preventDefault();
                 const r = sCanvas.getBoundingClientRect();
-                sMouseX = (e.touches[0].clientX - r.left) * (800 / r.width);
-                sMouseY = (e.touches[0].clientY - r.top) * (600 / r.height);
+                sMouseX = (e.touches[0].clientX - r.left) * (sWidth / r.width);
+                sMouseY = (e.touches[0].clientY - r.top) * (sHeight / r.height);
             }, {passive:false});
         }
 
         function shooterStart() {
-            if (sRunning) return;
+            if (sRunning && sAnimFrame) return;
             sRunning = true;
             sGameOver = false;
             document.getElementById('shooter-overlay').style.display = 'none';
             if (!sCanvas) shooterInit();
             shooterResetState();
+            if (sAnimFrame) { cancelAnimationFrame(sAnimFrame); sAnimFrame = null; }
             shooterLoop();
         }
 
@@ -718,7 +729,7 @@
             sBullets = []; sEnemyBullets = []; sAsteroids = []; sEnemies = []; sParticles = []; sDrones = []; sBoss = null;
             shooterApplyShipStats();
             sPlayer.shieldActive = false; sPlayer.shieldTimer = 0; sPlayer.shieldCooldown = 0;
-            sPlayer.x = 400; sPlayer.y = 520;
+            sPlayer.x = sWidth / 2; sPlayer.y = sHeight - 80;
             for (let i = 0; i < sUpgrades.droneCount; i++) {
                 sDrones.push({ x: sPlayer.x - 40 + i*20, y: sPlayer.y + 30, cooldown: 0, offsetX: -40 + i*20 });
             }
@@ -772,7 +783,6 @@
                 const btn = document.getElementById('buy-'+k.replace(/([A-Z])/g,'-$1').toLowerCase());
                 if (btn) { btn.innerText = '$'+sPrices[k]; btn.disabled = sMoney < sPrices[k]; }
             }
-            // Кнопки кораблей
             const btnStealth = document.getElementById('buy-stealth');
             if (btnStealth) {
                 if (sUnlockedShips.includes('stealth')) { btnStealth.innerText = 'КУПЛЕНО'; btnStealth.disabled = true; }
@@ -843,10 +853,7 @@
             document.getElementById('shooter-overlay').style.display = 'none';
             shooterResetState();
             sRunning = true;
-            if (sAnimFrame) { 
-                cancelAnimationFrame(sAnimFrame); 
-                sAnimFrame = null; 
-            }
+            if (sAnimFrame) { cancelAnimationFrame(sAnimFrame); sAnimFrame = null; }
             shooterLoop();
         }
 
@@ -864,14 +871,14 @@
 
         function shooterSpawnAsteroid() {
             const size = Math.random()*10 + 10;
-            sAsteroids.push({ x: Math.random()*800, y: -50, radius: size, speed: Math.random()*1.5+0.5, angle: Math.random()*Math.PI*2, rotSpeed: (Math.random()-0.5)*0.05, hp:1 });
+            sAsteroids.push({ x: Math.random()*sWidth, y: -50, radius: size, speed: Math.random()*1.5+0.5, angle: Math.random()*Math.PI*2, rotSpeed: (Math.random()-0.5)*0.05, hp:1 });
         }
         function shooterSpawnEnemy() {
             const size = Math.random()*15 + 20;
-            sEnemies.push({ x: Math.random()*800, y: -50, radius: size, speed: Math.random()*0.5+0.3, hp:3, maxHp:3, shootCooldown:0 });
+            sEnemies.push({ x: Math.random()*sWidth, y: -50, radius: size, speed: Math.random()*0.5+0.3, hp:3, maxHp:3, shootCooldown:0 });
         }
         function shooterSpawnBoss() {
-            sBoss = { x:400, y:150, radius:80, hp:200, maxHp:200, shootCooldown:60 };
+            sBoss = { x:sWidth/2, y:150, radius:80, hp:200, maxHp:200, shootCooldown:60 };
             sAsteroids = []; sEnemies = [];
             alert('⚠️ БОСС ПРИБЫЛ! ⚠️');
         }
@@ -907,7 +914,7 @@
             for (let i = sBullets.length-1; i >= 0; i--) {
                 const b = sBullets[i];
                 if (b.vx !== undefined) { b.x += b.vx; b.y += b.vy; } else { b.y -= b.speed; }
-                if (b.y < 0 || b.x < 0 || b.x > 800) sBullets.splice(i,1);
+                if (b.y < 0 || b.x < 0 || b.x > sWidth) sBullets.splice(i,1);
             }
 
             for (let i = sEnemyBullets.length-1; i >= 0; i--) {
@@ -917,13 +924,13 @@
                     if (sPlayer.hp <= 0) { shooterGameOver(); return; }
                     continue;
                 }
-                if (eb.y > 600) sEnemyBullets.splice(i,1);
+                if (eb.y > sHeight) sEnemyBullets.splice(i,1);
             }
 
             for (let i = sAsteroids.length-1; i >= 0; i--) {
                 const a = sAsteroids[i]; a.y += a.speed; a.angle += a.rotSpeed;
                 if (!sPlayer.shieldActive && Math.hypot(a.x-sPlayer.x, a.y-sPlayer.y) < a.radius+sPlayer.radius) { shooterGameOver(); return; }
-                if (a.y > 600+a.radius) { sAsteroids.splice(i,1); continue; }
+                if (a.y > sHeight+a.radius) { sAsteroids.splice(i,1); continue; }
                 for (let j = sBullets.length-1; j >= 0; j--) {
                     const b = sBullets[j];
                     if (Math.hypot(a.x-b.x, a.y-b.y) < a.radius+b.radius) {
@@ -942,7 +949,7 @@
                 const e = sEnemies[i]; e.y += e.speed;
                 if (e.y > 0) { e.shootCooldown--; if (e.shootCooldown <= 0) { sEnemyBullets.push({x:e.x, y:e.y+e.radius, radius:5, speed:5, color:'#ff0000'}); e.shootCooldown = 144; } }
                 if (!sPlayer.shieldActive && Math.hypot(e.x-sPlayer.x, e.y-sPlayer.y) < e.radius+sPlayer.radius) { shooterGameOver(); return; }
-                if (e.y > 600+e.radius) { sEnemies.splice(i,1); continue; }
+                if (e.y > sHeight+e.radius) { sEnemies.splice(i,1); continue; }
                 for (let j = sBullets.length-1; j >= 0; j--) {
                     const b = sBullets[j];
                     if (Math.hypot(e.x-b.x, e.y-b.y) < e.radius+b.radius) {
@@ -1004,7 +1011,8 @@
         }
 
         function shooterDraw() {
-            sCtx.fillStyle = '#0a0b1a'; sCtx.fillRect(0,0,800,600);
+            sCtx.fillStyle = '#0a0b1a'; sCtx.fillRect(0,0,sWidth,sHeight);
+            
             sCtx.save(); sCtx.translate(sPlayer.x, sPlayer.y);
             if (sPlayer.shieldActive) { sCtx.beginPath(); sCtx.arc(0,0,sPlayer.radius+15,0,Math.PI*2); sCtx.strokeStyle='#00aaff'; sCtx.lineWidth=4; sCtx.stroke(); sCtx.fillStyle='rgba(0,170,255,0.2)'; sCtx.fill(); }
             sCtx.fillStyle = '#00aaff'; sCtx.fillRect(-6,15,12,10);
@@ -1034,15 +1042,17 @@
                 sCtx.fillStyle='#ffff00'; sCtx.fillRect(-sBoss.radius*0.5,-sBoss.radius*0.2,sBoss.radius*0.3,sBoss.radius*0.3); sCtx.fillRect(sBoss.radius*0.2,-sBoss.radius*0.2,sBoss.radius*0.3,sBoss.radius*0.3);
                 sCtx.fillStyle='#ff00ff'; sCtx.fillRect(-sBoss.radius*0.2,sBoss.radius*0.1,sBoss.radius*0.4,sBoss.radius*0.4);
                 sCtx.restore();
-                sCtx.fillStyle='#333'; sCtx.fillRect(200,20,400,20);
-                sCtx.fillStyle='#ff0000'; sCtx.fillRect(200,20,(sBoss.hp/sBoss.maxHp)*400,20);
-                sCtx.strokeStyle='#fff'; sCtx.strokeRect(200,20,400,20);
+                sCtx.fillStyle='#333'; sCtx.fillRect(sWidth/2 - 200, 20, 400, 20);
+                sCtx.fillStyle='#ff0000'; sCtx.fillRect(sWidth/2 - 200, 20, (sBoss.hp/sBoss.maxHp)*400, 20);
+                sCtx.strokeStyle='#fff'; sCtx.strokeRect(sWidth/2 - 200, 20, 400, 20);
             }
 
-            sCtx.fillStyle='#333'; sCtx.fillRect(20,560,200,20);
-            sCtx.fillStyle='#00ff88'; sCtx.fillRect(20,560,(Math.max(0,sPlayer.hp)/sPlayer.maxHp)*200,20);
+            // ХП В ЛЕВОМ НИЖНЕМ УГЛУ
+            const hpY = sHeight - 40;
+            sCtx.fillStyle='#333'; sCtx.fillRect(20, hpY, 200, 20);
+            sCtx.fillStyle='#00ff88'; sCtx.fillRect(20, hpY, (Math.max(0,sPlayer.hp)/sPlayer.maxHp)*200, 20);
             sCtx.fillStyle='#fff'; sCtx.font='12px sans-serif'; sCtx.textAlign='center';
-            sCtx.fillText(`HP: ${Math.max(0,Math.floor(sPlayer.hp))}/${sPlayer.maxHp}`, 120, 574);
+            sCtx.fillText(`HP: ${Math.max(0,Math.floor(sPlayer.hp))}/${sPlayer.maxHp}`, 120, hpY + 14);
             sCtx.textAlign='left';
 
             sParticles.forEach(p => { sCtx.globalAlpha = p.life; sCtx.fillStyle = p.color; sCtx.fillRect(p.x,p.y,4,4); });
