@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NeiroX Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключаем современный шрифт -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-dark: #050510;
             --bg-card: rgba(20, 20, 35, 0.6);
             --accent: #00ff88;
-            --accent-glow: rgba(0, 255, 136, 0.3);
             --gold: #f1c40f;
+            --red: #c0392b;
+            --black: #2c3e50;
             --text-main: #ffffff;
             --text-dim: #8a8a9d;
             --border-color: rgba(255, 255, 255, 0.08);
@@ -35,10 +35,8 @@
             justify-content: center;
             padding: 20px;
             overflow: hidden;
-            transition: background 0.5s ease;
         }
 
-        /* Утилиты для страниц */
         .page {
             display: none;
             width: 100%;
@@ -54,265 +52,95 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* --- ПРОФИЛЬ --- */
+        /* Профиль */
         .profile-card {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
             border-radius: 24px;
             padding: 40px 25px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             position: relative;
             overflow: hidden;
         }
-
-        /* Свечение за карточкой */
-        .profile-card::before {
-            content: '';
-            position: absolute;
-            top: -50%; left: -50%; width: 200%; height: 200%;
-            background: conic-gradient(from 0deg, transparent, var(--accent), transparent 30%);
-            animation: rotate 6s linear infinite;
-            opacity: 0.1;
-            z-index: -1;
-        }
-
         .avatar-wrapper {
-            position: relative;
-            width: 130px;
-            height: 130px;
-            margin: 0 auto 20px;
+            position: relative; width: 130px; height: 130px; margin: 0 auto 20px;
         }
-        
         .avatar-wrapper::after {
-            content: '';
-            position: absolute;
-            inset: -5px;
-            border-radius: 50%;
+            content: ''; position: absolute; inset: -5px; border-radius: 50%;
             background: linear-gradient(45deg, var(--accent), #00aaff);
-            z-index: -1;
-            filter: blur(10px);
-            opacity: 0.8;
+            z-index: -1; filter: blur(10px); opacity: 0.8;
         }
-
         .avatar {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 4px solid var(--bg-dark);
-            object-fit: cover;
-            background: #111;
+            width: 100%; height: 100%; border-radius: 50%; border: 4px solid var(--bg-dark);
+            object-fit: cover; background: #111;
         }
-
-        .name { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        .username { font-size: 15px; color: var(--text-dim); font-weight: 500; margin-bottom: 25px; }
-        .username span { color: var(--accent); }
-
-        .stats-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        
+        .name { font-size: 28px; font-weight: 800; margin-bottom: 5px; }
+        .username { font-size: 15px; color: var(--text-dim); margin-bottom: 25px; }
+        .stats-row { display: flex; gap: 15px; margin-bottom: 30px; }
         .stat-box {
-            flex: 1;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transition: transform 0.2s;
+            flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 15px; display: flex; flex-direction: column; align-items: center;
         }
-        .stat-box:active { transform: scale(0.97); }
-
         .stat-value { font-size: 20px; font-weight: 800; color: var(--accent); }
         .stat-value.gold { color: var(--gold); }
-        .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-top: 5px; font-weight: 600; }
+        .stat-label { font-size: 11px; text-transform: uppercase; color: var(--text-dim); margin-top: 5px; }
 
-        /* Кнопки */
         .btn {
-            width: 100%;
-            padding: 18px;
-            border-radius: 16px;
-            border: none;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-            margin-bottom: 15px;
+            width: 100%; padding: 18px; border-radius: 16px; border: none;
+            font-size: 16px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: all 0.2s; margin-bottom: 15px;
+        }
+        .btn-primary { background: linear-gradient(135deg, #00ff88, #00aa44); color: #000; box-shadow: 0 10px 20px rgba(0, 255, 136, 0.2); }
+        .btn-secondary { background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border-color); }
+        .btn-close { background: transparent; color: var(--text-dim); font-size: 14px; padding: 10px; }
+
+        /* Рулетка */
+        .balance-display { text-align: center; margin-bottom: 20px; width: 100%; }
+        .balance-display .label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; }
+        .balance-display .value { font-size: 48px; font-weight: 800; color: var(--gold); text-shadow: 0 0 20px rgba(241, 196, 15, 0.4); }
+
+        .wheel-container {
             position: relative;
-            overflow: hidden;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #00ff88, #00aa44);
-            color: #000;
-            box-shadow: 0 10px 20px var(--accent-glow);
-        }
-        .btn-primary:active { transform: scale(0.96); box-shadow: 0 5px 10px var(--accent-glow); }
-
-        .btn-secondary {
-            background: rgba(255,255,255,0.05);
-            color: white;
-            border: 1px solid var(--border-color);
-        }
-        .btn-secondary:active { background: rgba(255,255,255,0.1); transform: scale(0.96); }
-
-        .btn-close {
-            background: transparent;
-            color: var(--text-dim);
-            font-size: 14px;
-            padding: 10px;
-            margin-top: 10px;
-        }
-
-        /* --- КАЗИНО --- */
-        .balance-display {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .balance-display .label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
-        .balance-display .value { font-size: 48px; font-weight: 800; color: var(--gold); text-shadow: 0 0 20px rgba(241, 196, 15, 0.4); line-height: 1; margin-top: 5px; }
-        .balance-display .value span { font-size: 24px; }
-
-        .slots-machine {
-            background: rgba(0,0,0,0.5);
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 24px;
-            padding: 25px 15px;
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 30px;
-            position: relative;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
-        }
-
-        .reel {
-            flex: 1;
-            aspect-ratio: 1;
-            background: #fff;
-            border-radius: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 45px;
-            box-shadow: inset 0 5px 15px rgba(0,0,0,0.2), 0 5px 15px rgba(0,0,0,0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        .reel::after {
-            content: '';
-            position: absolute; inset: 0;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
-        }
-        .reel.spinning { animation: blur 0.2s linear infinite; }
-        @keyframes blur {
-            0% { transform: translateY(-5px); filter: blur(1px); }
-            50% { transform: translateY(5px); filter: blur(2px); }
-            100% { transform: translateY(-5px); filter: blur(1px); }
-        }
-
-        .bet-controls {
-            display: flex;
-            gap: 15px;
+            width: 300px; height: 300px;
             margin-bottom: 20px;
         }
-        .bet-input {
-            width: 40%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            color: white;
-            font-size: 20px;
-            font-weight: 700;
-            text-align: center;
-            padding: 15px;
-            outline: none;
+        #wheelCanvas {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.8);
+            transition: transform 5s cubic-bezier(0.15, 0.85, 0.15, 1);
         }
-        .bet-input:focus { border-color: var(--accent); }
-
-        .spin-btn {
-            flex: 1;
-            background: linear-gradient(135deg, #f1c40f, #d4ac0d);
-            color: #000;
-            font-size: 18px;
-            border-radius: 16px;
-            font-weight: 800;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(241, 196, 15, 0.2);
-            transition: 0.2s;
-        }
-        .spin-btn:active { transform: scale(0.95); }
-        .spin-btn:disabled { background: #333; color: #666; box-shadow: none; }
-
-        .result-msg {
-            text-align: center;
-            font-size: 18px;
-            font-weight: 700;
-            min-height: 25px;
-            margin-top: 10px;
-            text-shadow: 0 0 10px currentColor;
-        }
-
-        /* --- ЗМЕЙКА --- */
-        .snake-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            margin-bottom: 15px;
-        }
-        .snake-score { font-size: 20px; font-weight: 800; color: var(--accent); }
-
-        #snake-canvas {
-            background: #000;
-            border: 2px solid var(--border-color);
-            border-radius: 20px;
-            box-shadow: 0 0 40px rgba(0, 255, 136, 0.15), inset 0 0 20px rgba(0,0,0,0.8);
-            touch-action: none;
-        }
-
-        .game-over {
+        .ball {
             position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(5px);
-            border-radius: 20px;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
-        .game-over h2 { color: #ff4444; font-size: 28px; margin-bottom: 10px; }
-        .game-over p { color: var(--text-dim); margin-bottom: 20px; text-align: center; }
-        .game-over .score { font-size: 36px; color: var(--gold); font-weight: 800; margin-bottom: 20px; }
-        
-        .btn-restart {
-            background: var(--accent);
-            color: #000;
-            padding: 12px 30px;
-            border-radius: 30px;
-            font-weight: 700;
-            border: none;
-            cursor: pointer;
+            width: 12px; height: 12px;
+            background: radial-gradient(circle at 30% 30%, #fff, #aaa);
+            border-radius: 50%; box-shadow: 0 0 10px #fff;
+            top: 50%; left: 50%; z-index: 10;
+            transform: translate(-50%, -50%);
+            transition: transform 5s cubic-bezier(0.15, 0.85, 0.15, 1);
         }
 
-        /* Сетка для змейки */
-        .snake-wrapper {
-            position: relative;
+        .bet-controls { display: flex; gap: 10px; width: 100%; margin-bottom: 15px; }
+        .bet-input {
+            width: 35%; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color);
+            border-radius: 16px; color: white; font-size: 18px; font-weight: 700; text-align: center; padding: 15px;
         }
+        .spin-btn {
+            flex: 1; background: linear-gradient(135deg, #f1c40f, #d4ac0d); color: #000;
+            font-size: 18px; border-radius: 16px; font-weight: 800; border: none; cursor: pointer;
+        }
+
+        .bets-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 20px; }
+        .bet-btn { padding: 15px; border-radius: 12px; border: none; font-weight: 700; font-size: 14px; cursor: pointer; color: white; }
+        .bet-btn.red { background: var(--red); }
+        .bet-btn.black { background: var(--black); }
+        .bet-btn.green { background: #27ae60; grid-column: span 3; }
+
+        .result-msg { text-align: center; font-size: 18px; font-weight: 700; min-height: 25px; margin-top: 10px; text-shadow: 0 0 10px currentColor; }
     </style>
 </head>
 <body>
@@ -320,165 +148,131 @@
     <!-- ПРОФИЛЬ -->
     <div id="page-profile" class="page active">
         <div class="profile-card">
-            <div class="avatar-wrapper">
-                <img src="" alt="Avatar" class="avatar" id="user-avatar">
-            </div>
+            <div class="avatar-wrapper"><img src="" alt="Avatar" class="avatar" id="user-avatar"></div>
             <h1 class="name" id="user-name">Загрузка...</h1>
             <p class="username">@<span id="user-username">username</span></p>
-            
             <div class="stats-row">
-                <div class="stat-box">
-                    <span class="stat-value" id="user-id">...</span>
-                    <span class="stat-label">ID</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-value gold" id="profile-balance">⭐ ...</span>
-                    <span class="stat-label">Баланс</span>
-                </div>
+                <div class="stat-box"><span class="stat-value" id="user-id">...</span><span class="stat-label">ID</span></div>
+                <div class="stat-box"><span class="stat-value gold" id="profile-balance">⭐ ...</span><span class="stat-label">Баланс</span></div>
             </div>
-
-            <button class="btn btn-primary" onclick="switchPage('page-casino')">
-                🎰 Перейти в Казино
-            </button>
-            <button class="btn btn-secondary" onclick="switchPage('page-snake')">
-                🐍 Играть в Змейку
-            </button>
-            
+            <button class="btn btn-primary" onclick="switchPage('page-casino')">🎰 Казино (Слоты)</button>
+            <button class="btn btn-primary" onclick="switchPage('page-roulette')" style="background: linear-gradient(135deg, #ff4444, #aa0000);">🎡 Рулетка</button>
+            <button class="btn btn-secondary" onclick="switchPage('page-snake')">🐍 Играть в Змейку</button>
             <button class="btn btn-close" onclick="tg.close()">Закрыть</button>
         </div>
     </div>
 
     <!-- КАЗИНО -->
     <div id="page-casino" class="page">
-        <div class="balance-display" style="width: 100%;">
-            <div class="label">Твой баланс</div>
-            <div class="value" id="casino-balance">0<span> ⭐</span></div>
+        <div class="balance-display"><div class="label">Твой баланс</div><div class="value" id="casino-balance">0<span> ⭐</span></div></div>
+        <div class="slots-machine" style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <div class="reel" id="reel1">🍒</div><div class="reel" id="reel2">🍋</div><div class="reel" id="reel3">💎</div>
         </div>
+        <div class="bet-controls">
+            <input type="number" id="betAmount" class="bet-input" value="100" min="100" step="50">
+            <button class="spin-btn" id="spinBtn" onclick="spinSlots()">КРУТИТЬ</button>
+        </div>
+        <div class="result-msg" id="resultText"></div>
+        <button class="btn btn-secondary" onclick="switchPage('page-profile')">⬅ Назад</button>
+    </div>
 
-        <div class="slots-machine">
-            <div class="reel" id="reel1">🍒</div>
-            <div class="reel" id="reel2">🍋</div>
-            <div class="reel" id="reel3">💎</div>
+    <!-- РУЛЕТКА -->
+    <div id="page-roulette" class="page">
+        <div class="balance-display"><div class="label">Твой баланс</div><div class="value" id="roulette-balance">0<span> ⭐</span></div></div>
+        
+        <div class="wheel-container">
+            <canvas id="wheelCanvas" width="300" height="300"></canvas>
+            <div class="ball" id="ball"></div>
         </div>
 
         <div class="bet-controls">
-            <input type="number" id="betAmount" class="bet-input" value="100" min="100" step="50">
-            <button class="spin-btn" id="spinBtn" onclick="spin()">КРУТИТЬ</button>
+            <input type="number" id="rouletteBet" class="bet-input" value="100" min="100" step="50">
+        </div>
+        
+        <div class="bets-grid">
+            <button class="bet-btn red" onclick="spinRoulette('red')">КРАСНОЕ</button>
+            <button class="bet-btn black" onclick="spinRoulette('black')">ЧЕРНОЕ</button>
+            <button class="bet-btn green" onclick="spinRoulette('green')">ЗЕЛЕНОЕ (0)</button>
         </div>
 
-        <div class="result-msg" id="resultText"></div>
-
-        <button class="btn btn-secondary" style="margin-top: 20px;" onclick="switchPage('page-profile')">⬅ Назад</button>
+        <div class="result-msg" id="rouletteResult"></div>
+        <button class="btn btn-secondary" onclick="switchPage('page-profile')">⬅ Назад</button>
     </div>
 
     <!-- ЗМЕЙКА -->
     <div id="page-snake" class="page">
-        <div class="snake-header">
+        <div class="snake-header" style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 15px;">
             <h2 style="font-size: 20px;">🐍 Змейка</h2>
-            <div class="snake-score">Счёт: <span id="snake-score">0</span></div>
+            <div class="snake-score" style="font-size: 20px; font-weight: 800; color: var(--accent);">Счёт: <span id="snake-score">0</span></div>
         </div>
-
-        <div class="snake-wrapper">
-            <canvas id="snake-canvas" width="320" height="320"></canvas>
-            <div id="snake-gameover" class="game-over">
-                <h2>GAME OVER</h2>
-                <p>Твой результат</p>
-                <div class="score" id="snake-final-score">0</div>
-                <button class="btn-restart" onclick="restartSnake()">Играть снова</button>
+        <div style="position: relative;">
+            <canvas id="snake-canvas" width="320" height="320" style="background: #000; border-radius: 20px;"></canvas>
+            <div id="snake-gameover" style="position: absolute; inset: 0; background: rgba(0,0,0,0.85); border-radius: 20px; display: none; flex-direction: column; justify-content: center; align-items: center;">
+                <h2 style="color: #ff4444; font-size: 28px;">GAME OVER</h2>
+                <p style="color: var(--text-dim); margin-bottom: 10px;">Твой результат</p>
+                <div id="snake-final-score" style="font-size: 36px; color: var(--gold); font-weight: 800;">0</div>
+                <button class="btn btn-primary" style="width: auto; margin-top: 20px;" onclick="restartSnake()">Играть снова</button>
             </div>
         </div>
-
         <button class="btn btn-secondary" style="margin-top: 20px;" onclick="switchPage('page-profile')">⬅ Назад</button>
     </div>
 
     <script>
         const tg = window.Telegram?.WebApp;
         let user = null;
+        if (tg) { tg.ready(); tg.expand(); user = tg.initDataUnsafe?.user; }
 
-        if (tg) {
-            tg.ready();
-            tg.expand();
-            user = tg.initDataUnsafe?.user;
-        }
-
-        // ВСТАВЬ СЮДА СВОЮ ССЫЛКУ ОТ NGROK
-        const API_BASE_URL = "https://goofiness-equator-velvet.ngrok-free.dev";
+        const API_BASE_URL = "https://goofiness-equator-velvet.ngrok-free.dev"; // ТВОЙ NGROK
         let casinoBalance = 0; 
 
-        // Навигация с эффектом
         function switchPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            const newPage = document.getElementById(pageId);
-            newPage.classList.add('active');
-            
-            if (pageId === 'page-snake') {
-                document.getElementById('snake-gameover').style.display = 'none';
-                startSnakeGame();
-            } else {
-                stopSnakeGame();
-            }
+            document.getElementById(pageId).classList.add('active');
+            if (pageId === 'page-snake') { startSnakeGame(); } else { stopSnakeGame(); }
         }
 
-        // Загрузка профиля
         if (user) {
             document.getElementById('user-name').innerText = user.first_name;
             document.getElementById('user-username').innerText = user.username || 'нет_юзернейма';
             document.getElementById('user-id').innerText = user.id;
             document.getElementById('user-avatar').src = user.photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.first_name) + '&background=00ff88&color=000&size=200';
 
-            fetch(`${API_BASE_URL}/api/balance/${user.id}?v=${Date.now()}`, {
-                headers: { 'ngrok-skip-browser-warning': 'true' }
-            })
+            fetch(`${API_BASE_URL}/api/balance/${user.id}?v=${Date.now()}`, { headers: { 'ngrok-skip-browser-warning': 'true' } })
             .then(res => res.json())
-            .then(data => {
-                casinoBalance = data.balance;
-                updateAllBalances();
-            })
-            .catch(err => {
-                document.getElementById('profile-balance').innerText = '⭐ Оффлайн';
-            });
-        } else {
-            document.getElementById('user-name').innerText = "Ошибка доступа";
+            .then(data => { casinoBalance = data.balance; updateAllBalances(); })
+            .catch(err => { document.getElementById('profile-balance').innerText = '⭐ Оффлайн'; });
         }
 
         function updateAllBalances() {
             const formatted = casinoBalance.toLocaleString('ru-RU');
             document.getElementById('profile-balance').innerText = `⭐ ${formatted}`;
             document.getElementById('casino-balance').innerHTML = `${formatted}<span> ⭐</span>`;
+            document.getElementById('roulette-balance').innerHTML = `${formatted}<span> ⭐</span>`;
         }
 
         function updateBalanceOnServer(userId, amount, callback) {
-            if (!userId) return;
             fetch(`${API_BASE_URL}/api/update_balance`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
                 body: JSON.stringify({ user_id: userId, amount: amount })
-            })
-            .then(res => res.json())
-            .then(() => { if(callback) callback(); })
-            .catch(err => console.error("Ошибка:", err));
+            }).then(() => { if(callback) callback(); }).catch(err => console.error(err));
         }
 
-        // --- КАЗИНО ---
+        // --- СЛОТЫ ---
         let isSpinning = false;
         const symbols = ['🍒', '🍋', '🍊', '💎', '7️⃣', '🔔'];
         
-        function spin() {
+        function spinSlots() {
             if (isSpinning || !user) return;
             const bet = parseInt(document.getElementById('betAmount').value);
             if (isNaN(bet) || bet < 100 || bet > casinoBalance) return;
 
-            casinoBalance -= bet;
-            updateAllBalances();
-            
+            casinoBalance -= bet; updateAllBalances();
             isSpinning = true;
             document.getElementById('spinBtn').disabled = true;
 
             const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
-            reels.forEach(r => {
-                r.classList.add('spinning');
-                r.style.background = '#fff';
-            });
+            reels.forEach(r => r.classList.add('spinning'));
 
             const spinInterval = setInterval(() => {
                 reels.forEach(r => r.innerText = symbols[Math.floor(Math.random() * symbols.length)]);
@@ -487,34 +281,134 @@
             setTimeout(() => {
                 clearInterval(spinInterval);
                 reels.forEach(r => r.classList.remove('spinning'));
-                
                 const res1 = symbols[Math.floor(Math.random() * symbols.length)];
                 const res2 = symbols[Math.floor(Math.random() * symbols.length)];
                 const res3 = symbols[Math.floor(Math.random() * symbols.length)];
-                
-                reels[0].innerText = res1; 
-                reels[1].innerText = res2; 
-                reels[2].innerText = res3;
+                reels[0].innerText = res1; reels[1].innerText = res2; reels[2].innerText = res3;
 
                 if (res1 === res2 && res2 === res3) {
-                    const win = bet * 3;
-                    casinoBalance += win;
-                    
-                    // Подсветка выигрыша
-                    reels.forEach(r => r.style.background = '#00ff88');
-                    
-                    document.getElementById('resultText').innerText = `ДЖЕКПОТ! +${win} ⭐`;
+                    const win = bet * 3; casinoBalance += win;
+                    document.getElementById('resultText').innerText = `ДЖЕКПОТ! +${win}`;
                     document.getElementById('resultText').style.color = "#f1c40f";
-                    updateBalanceOnServer(user.id, win, updateAllBalances);
+                    updateBalanceOnServer(user.id, win);
                 } else {
-                    document.getElementById('resultText').innerText = `Проигрыш: -${bet} ⭐`;
-                    document.getElementById('resultText').style.color = "#ff4444";
-                    updateBalanceOnServer(user.id, -bet, updateAllBalances);
+                    document.getElementById('resultText').innerText = `Проигрыш: -${bet}`;
+                    document.getElementById('resultText').style.color = "#e74c3c";
+                    updateBalanceOnServer(user.id, -bet);
                 }
-                
+                updateAllBalances();
                 isSpinning = false;
                 document.getElementById('spinBtn').disabled = false;
             }, 2000);
+        }
+
+        // --- РУЛЕТКА (ВИЗУАЛ) ---
+        const wheelCanvas = document.getElementById('wheelCanvas');
+        const ctx = wheelCanvas.getContext('2d');
+        const wheelRadius = 150;
+        const centerX = 150;
+        const centerY = 150;
+        
+        // 0 - зеленый, остальные - красные/черные
+        const wheelNumbers = [
+            0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 
+            5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
+        ];
+        const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+        const numSectors = 37;
+        const sliceDegrees = 360 / numSectors;
+
+        function drawRouletteWheel() {
+            ctx.clearRect(0, 0, 300, 300);
+            for (let i = 0; i < numSectors; i++) {
+                const startAngle = i * (2 * Math.PI / numSectors);
+                const endAngle = (i + 1) * (2 * Math.PI / numSectors);
+                const num = wheelNumbers[i];
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, wheelRadius, startAngle, endAngle);
+                
+                if (num === 0) ctx.fillStyle = "#27ae60";
+                else if (redNumbers.includes(num)) ctx.fillStyle = "#c0392b";
+                else ctx.fillStyle = "#2c3e50";
+                
+                ctx.fill();
+                ctx.strokeStyle = "#111";
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+            // Внутренний круг
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 30, 0, 2 * Math.PI);
+            ctx.fillStyle = "#111";
+            ctx.fill();
+            ctx.strokeStyle = "#f1c40f";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+        drawRouletteWheel();
+
+        let isRouletteSpinning = false;
+        let currentRotation = 0;
+
+        function spinRoulette(betType) {
+            if (isRouletteSpinning || !user) return;
+            const bet = parseInt(document.getElementById('rouletteBet').value);
+            if (isNaN(bet) || bet < 100 || bet > casinoBalance) return;
+
+            casinoBalance -= bet; updateAllBalances();
+            isRouletteSpinning = true;
+            document.getElementById('rouletteResult').innerText = "";
+            
+            // Выбираем выигрышный сектор
+            const winningIndex = Math.floor(Math.random() * numSectors);
+            const winningNumber = wheelNumbers[winningIndex];
+            
+            // Вычисляем угол
+            const targetSectorAngle = (winningIndex * sliceDegrees) + (sliceDegrees / 2);
+            const baseRotation = 360 - targetSectorAngle;
+            const spins = 5 * 360;
+            const newRotation = currentRotation + spins + (baseRotation - (currentRotation % 360)) + (Math.random() * 5 - 2.5);
+            currentRotation = newRotation;
+
+            // Крутим колесо
+            wheelCanvas.style.transform = `rotate(${newRotation}deg)`;
+            
+            // Крутим шарик
+            const ball = document.getElementById('ball');
+            ball.style.transform = `translate(-50%, -50%) rotate(${-newRotation}deg) translateY(-120px)`;
+
+            setTimeout(() => {
+                let color = "black";
+                if (winningNumber === 0) color = "green";
+                else if (redNumbers.includes(winningNumber)) color = "red";
+
+                let winAmount = 0;
+                if (betType === color) {
+                    if (color === 'green') winAmount = bet * 14;
+                    else winAmount = bet * 2;
+                    casinoBalance += winAmount;
+                    document.getElementById('rouletteResult').innerText = `ПОБЕДА! Выпало ${winningNumber} (${color}). +${winAmount}`;
+                    document.getElementById('rouletteResult').style.color = "#f1c40f";
+                    updateBalanceOnServer(user.id, winAmount);
+                } else {
+                    document.getElementById('rouletteResult').innerText = `Выпало ${winningNumber} (${color}). Проигрыш: -${bet}`;
+                    document.getElementById('rouletteResult').style.color = "#e74c3c";
+                    updateBalanceOnServer(user.id, -bet);
+                }
+                
+                updateAllBalances();
+                isRouletteSpinning = false;
+                
+                // Сбрасываем шарик в исходное положение
+                setTimeout(() => {
+                    ball.style.transition = 'none';
+                    ball.style.transform = `translate(-50%, -50%) translateY(-120px)`;
+                    setTimeout(() => { ball.style.transition = 'transform 5s cubic-bezier(0.15, 0.85, 0.15, 1)'; }, 50);
+                }, 1000);
+                
+            }, 5000); // Ждем 5 секунд, пока крутится
         }
 
         // --- ЗМЕЙКА ---
@@ -524,18 +418,16 @@
         function startSnakeGame() {
             const canvas = document.getElementById('snake-canvas');
             const ctx = canvas.getContext('2d');
-            const gridSize = 16; // Четное число для ровных пикселей
+            const gridSize = 16;
             const cellSize = canvas.width / gridSize;
-
             let snake = [{x: 8, y: 8}];
             let food = {x: 12, y: 8};
-            let dx = 0;
-            let dy = 0;
-            let gameStarted = false; 
+            let dx = 0; let dy = 0; let gameStarted = false; 
 
             snakeScore = 0;
             document.getElementById('snake-score').innerText = snakeScore;
-            
+            document.getElementById('snake-gameover').style.display = 'none';
+
             document.onkeydown = (e) => {
                 if (e.key === 'ArrowUp' && dy !== 1) { dx = 0; dy = -1; gameStarted = true; }
                 if (e.key === 'ArrowDown' && dy !== -1) { dx = 0; dy = 1; gameStarted = true; }
@@ -544,10 +436,7 @@
             };
 
             let touchStartX = 0, touchStartY = 0;
-            canvas.addEventListener('touchstart', e => {
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
-            });
+            canvas.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; });
             canvas.addEventListener('touchend', e => {
                 let diffX = e.changedTouches[0].clientX - touchStartX;
                 let diffY = e.changedTouches[0].clientY - touchStartY;
@@ -561,70 +450,35 @@
             });
 
             if (snakeInterval) clearInterval(snakeInterval);
-            
-            // Отрисовка стартового кадра
             drawSnake(ctx, canvas, snake, food, cellSize);
 
             snakeInterval = setInterval(() => {
                 if (!gameStarted) return; 
-
                 const head = {x: snake[0].x + dx, y: snake[0].y + dy};
-
                 if (head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize) return gameOverSnake();
-                for (let i = 0; i < snake.length; i++) {
-                    if (snake[i].x === head.x && snake[i].y === head.y) return gameOverSnake();
-                }
-
+                for (let i = 0; i < snake.length; i++) { if (snake[i].x === head.x && snake[i].y === head.y) return gameOverSnake(); }
                 snake.unshift(head);
-
                 if (head.x === food.x && head.y === food.y) {
                     snakeScore += 10;
                     document.getElementById('snake-score').innerText = snakeScore;
-                    
-                    // Генерируем еду не на змейке
                     let newFood;
-                    do {
-                        newFood = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) };
-                    } while (snake.some(s => s.x === newFood.x && s.y === newFood.y));
+                    do { newFood = { x: Math.floor(Math.random() * gridSize), y: Math.floor(Math.random() * gridSize) }; } while (snake.some(s => s.x === newFood.x && s.y === newFood.y));
                     food = newFood;
-                    
-                } else {
-                    snake.pop();
-                }
-
+                } else { snake.pop(); }
                 drawSnake(ctx, canvas, snake, food, cellSize);
             }, 150); 
         }
 
         function drawSnake(ctx, canvas, snake, food, cellSize) {
-            ctx.fillStyle = '#050510';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Еда (свечение)
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#ff4444';
-            ctx.fillStyle = '#ff4444';
-            ctx.beginPath();
-            ctx.arc(food.x * cellSize + cellSize/2, food.y * cellSize + cellSize/2, cellSize/2 - 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-
-            // Змейка (градиент)
+            ctx.fillStyle = '#050510'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.shadowBlur = 15; ctx.shadowColor = '#ff4444'; ctx.fillStyle = '#ff4444';
+            ctx.beginPath(); ctx.arc(food.x * cellSize + cellSize/2, food.y * cellSize + cellSize/2, cellSize/2 - 3, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
             snake.forEach((part, index) => {
                 const isHead = index === 0;
                 ctx.fillStyle = isHead ? '#00ff88' : '#00aa44';
-                ctx.shadowBlur = isHead ? 15 : 5;
-                ctx.shadowColor = '#00ff88';
-                
-                // Скругленные квадратики
-                const x = part.x * cellSize + 1;
-                const y = part.y * cellSize + 1;
-                const w = cellSize - 2;
-                const r = 4; // радиус скругления
-                
-                ctx.beginPath();
-                ctx.roundRect(x, y, w, w, r);
-                ctx.fill();
+                ctx.shadowBlur = isHead ? 15 : 5; ctx.shadowColor = '#00ff88';
+                const x = part.x * cellSize + 1; const y = part.y * cellSize + 1; const w = cellSize - 2; const r = 4;
+                ctx.beginPath(); ctx.roundRect(x, y, w, w, r); ctx.fill();
             });
             ctx.shadowBlur = 0;
         }
@@ -632,32 +486,18 @@
         function gameOverSnake() {
             clearInterval(snakeInterval);
             document.getElementById('snake-gameover').style.display = 'flex';
-            
             let botReward = Math.floor(snakeScore / 10) * 5;
             document.getElementById('snake-final-score').innerText = `+${botReward} ⭐`;
-
             if (botReward > 0 && user) {
                 updateBalanceOnServer(user.id, botReward, () => {
-                    fetch(`${API_BASE_URL}/api/balance/${user.id}?v=${Date.now()}`, {
-                        headers: { 'ngrok-skip-browser-warning': 'true' }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        casinoBalance = data.balance;
-                        updateAllBalances();
-                    });
+                    fetch(`${API_BASE_URL}/api/balance/${user.id}?v=${Date.now()}`, { headers: { 'ngrok-skip-browser-warning': 'true' } })
+                    .then(res => res.json()).then(data => { casinoBalance = data.balance; updateAllBalances(); });
                 });
             }
         }
 
-        function restartSnake() {
-            document.getElementById('snake-gameover').style.display = 'none';
-            startSnakeGame();
-        }
-
-        function stopSnakeGame() {
-            if (snakeInterval) clearInterval(snakeInterval);
-        }
+        function restartSnake() { document.getElementById('snake-gameover').style.display = 'none'; startSnakeGame(); }
+        function stopSnakeGame() { if (snakeInterval) clearInterval(snakeInterval); }
     </script>
 </body>
 </html>
