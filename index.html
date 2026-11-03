@@ -6,6 +6,7 @@
     <title>NeiroX Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-dark: #050510;
@@ -34,7 +35,8 @@
             display: flex;
             justify-content: center;
             padding: 20px;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         .page {
@@ -141,9 +143,88 @@
         .bet-btn.green { background: #27ae60; grid-column: span 3; }
 
         .result-msg { text-align: center; font-size: 18px; font-weight: 700; min-height: 25px; margin-top: 10px; text-shadow: 0 0 10px currentColor; }
+
+        /* Слоты */
+        .slots-machine { display: flex; gap: 10px; margin-bottom: 20px; }
+        .reel {
+            width: 80px; height: 80px; background: rgba(0,0,0,0.5); border: 2px solid var(--border-color);
+            border-radius: 16px; display: flex; align-items: center; justify-content: center;
+            font-size: 40px;
+        }
+        .reel.spinning { animation: spinReel 0.1s linear infinite; }
+        @keyframes spinReel {
+            0% { transform: translateY(-5px); }
+            100% { transform: translateY(5px); }
+        }
+
+        /* Змейка */
+        #snake-canvas { background: #000; border-radius: 20px; }
+        .snake-header { display: flex; justify-content: space-between; width: 100%; margin-bottom: 15px; }
+        .snake-score { font-size: 20px; font-weight: 800; color: var(--accent); }
+
+        /* Шутер */
+        #shooter-canvas {
+            width: 100%; height: auto; display: block;
+            background: #0a0b1a; border: 2px solid #00ff88; border-radius: 12px;
+            touch-action: none; max-width: 100%;
+        }
+        .shooter-ui-top {
+            position: absolute; top: 6px; left: 8px; color: #00ff88; font-size: 9px;
+            z-index: 10; line-height: 1.5; font-family: 'Press Start 2P', monospace;
+            pointer-events: none; text-shadow: 1px 1px 0 #000;
+        }
+        #shooter-overlay {
+            position: absolute; inset: 0; background: rgba(5,5,16,0.96); display: none;
+            flex-direction: column; justify-content: flex-start; align-items: center;
+            border-radius: 12px; padding: 8px; overflow-y: auto;
+        }
+        #shooter-overlay::-webkit-scrollbar { width: 4px; }
+        #shooter-overlay::-webkit-scrollbar-thumb { background: #00ff88; border-radius: 2px; }
+
+        .shooter-tab-btn {
+            padding: 6px 8px; background: #333; color: white; border: none;
+            cursor: pointer; font-size: 9px; border-radius: 6px; font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .shooter-tab-btn.active { background: #00aa44; border: 1px solid #00ff88; }
+        .shooter-tab-content { display: none; width: 100%; }
+        .shooter-tab-content.active { display: block; }
+
+        .shooter-shop-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.5); border: 1px solid #333; padding: 6px 8px;
+            border-radius: 8px; font-size: 9px; font-family: 'Montserrat', sans-serif;
+            gap: 4px;
+        }
+        .shooter-shop-item div { line-height: 1.3; }
+        .shooter-shop-item button {
+            background: #00aa44; color: #fff; border: 1px solid #00ff88;
+            padding: 5px 7px; border-radius: 5px; cursor: pointer;
+            font-size: 9px; font-weight: 700; white-space: nowrap;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .shooter-shop-item button:disabled { background: #333; border-color: #555; color: #666; cursor: not-allowed; }
+
+        #achievement-popup {
+            position: fixed; top: 20px; right: 20px; background: rgba(241, 196, 15, 0.95);
+            color: #000; padding: 12px 16px; border-radius: 10px; font-size: 12px;
+            display: none; z-index: 100; text-align: center; font-weight: 700;
+            box-shadow: 0 0 20px rgba(241, 196, 15, 0.5);
+            font-family: 'Press Start 2P', monospace;
+            max-width: 80vw;
+        }
+
+        .shooter-stats-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+        }
+        @media (max-width: 360px) {
+            .shooter-stats-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
+
+    <div id="achievement-popup">🏆 ДОСТИЖЕНИЕ!</div>
 
     <!-- ПРОФИЛЬ -->
     <div id="page-profile" class="page active">
@@ -158,6 +239,7 @@
             <button class="btn btn-primary" onclick="switchPage('page-casino')">🎰 Казино (Слоты)</button>
             <button class="btn btn-primary" onclick="switchPage('page-roulette')" style="background: linear-gradient(135deg, #ff4444, #aa0000);">🎡 Рулетка</button>
             <button class="btn btn-secondary" onclick="switchPage('page-snake')">🐍 Играть в Змейку</button>
+            <button class="btn btn-secondary" onclick="switchPage('page-shooter')" style="background: linear-gradient(135deg, #ff00ff, #8800aa); color: #fff;">🚀 Космический Шутер</button>
             <button class="btn btn-close" onclick="tg.close()">Закрыть</button>
         </div>
     </div>
@@ -165,7 +247,7 @@
     <!-- КАЗИНО -->
     <div id="page-casino" class="page">
         <div class="balance-display"><div class="label">Твой баланс</div><div class="value" id="casino-balance">0<span> ⭐</span></div></div>
-        <div class="slots-machine" style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <div class="slots-machine">
             <div class="reel" id="reel1">🍒</div><div class="reel" id="reel2">🍋</div><div class="reel" id="reel3">💎</div>
         </div>
         <div class="bet-controls">
@@ -179,34 +261,30 @@
     <!-- РУЛЕТКА -->
     <div id="page-roulette" class="page">
         <div class="balance-display"><div class="label">Твой баланс</div><div class="value" id="roulette-balance">0<span> ⭐</span></div></div>
-        
         <div class="wheel-container">
             <canvas id="wheelCanvas" width="300" height="300"></canvas>
             <div class="ball" id="ball"></div>
         </div>
-
         <div class="bet-controls">
             <input type="number" id="rouletteBet" class="bet-input" value="100" min="100" step="50">
         </div>
-        
         <div class="bets-grid">
             <button class="bet-btn red" onclick="spinRoulette('red')">КРАСНОЕ</button>
             <button class="bet-btn black" onclick="spinRoulette('black')">ЧЕРНОЕ</button>
             <button class="bet-btn green" onclick="spinRoulette('green')">ЗЕЛЕНОЕ (0)</button>
         </div>
-
         <div class="result-msg" id="rouletteResult"></div>
         <button class="btn btn-secondary" onclick="switchPage('page-profile')">⬅ Назад</button>
     </div>
 
     <!-- ЗМЕЙКА -->
     <div id="page-snake" class="page">
-        <div class="snake-header" style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 15px;">
+        <div class="snake-header">
             <h2 style="font-size: 20px;">🐍 Змейка</h2>
-            <div class="snake-score" style="font-size: 20px; font-weight: 800; color: var(--accent);">Счёт: <span id="snake-score">0</span></div>
+            <div class="snake-score">Счёт: <span id="snake-score">0</span></div>
         </div>
         <div style="position: relative;">
-            <canvas id="snake-canvas" width="320" height="320" style="background: #000; border-radius: 20px;"></canvas>
+            <canvas id="snake-canvas" width="320" height="320"></canvas>
             <div id="snake-gameover" style="position: absolute; inset: 0; background: rgba(0,0,0,0.85); border-radius: 20px; display: none; flex-direction: column; justify-content: center; align-items: center;">
                 <h2 style="color: #ff4444; font-size: 28px;">GAME OVER</h2>
                 <p style="color: var(--text-dim); margin-bottom: 10px;">Твой результат</p>
@@ -217,18 +295,90 @@
         <button class="btn btn-secondary" style="margin-top: 20px;" onclick="switchPage('page-profile')">⬅ Назад</button>
     </div>
 
+    <!-- КОСМИЧЕСКИЙ ШУТЕР -->
+    <div id="page-shooter" class="page">
+        <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 8px; align-items: center;">
+            <h2 style="font-size: 16px;">🚀 Шутер</h2>
+            <div style="font-size: 14px; font-weight: 800; color: var(--gold);">$<span id="shooter-money-display">0</span></div>
+        </div>
+        <div style="position: relative; width: 100%;">
+            <div class="shooter-ui-top">
+                СЧЕТ: <span id="shooter-score">0</span><br>ВОЛНА: <span id="shooter-wave">1</span>
+            </div>
+            <canvas id="shooter-canvas" width="800" height="600"></canvas>
+
+            <div id="shooter-overlay">
+                <h2 style="color: #ff4444; font-size: 20px; margin-bottom: 4px; font-family: 'Press Start 2P', monospace;">GAME OVER</h2>
+                <div style="font-size: 12px; color: var(--gold); margin-bottom: 8px; font-weight: 700;">БАЛАНС: $<span id="shooter-shop-money">0</span></div>
+
+                <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px;">
+                    <button class="shooter-tab-btn active" onclick="shooterSwitchTab('shooter-tab-stats', event)">СТАТЫ</button>
+                    <button class="shooter-tab-btn" onclick="shooterSwitchTab('shooter-tab-skills', event)">НАВЫКИ</button>
+                    <button class="shooter-tab-btn" onclick="shooterSwitchTab('shooter-tab-drones', event)">ДРОНЫ</button>
+                    <button class="shooter-tab-btn" onclick="shooterSwitchTab('shooter-tab-ships', event)">КОРАБЛИ</button>
+                    <button class="shooter-tab-btn" onclick="shooterSwitchTab('shooter-tab-ach', event)">🏆</button>
+                </div>
+
+                <div id="shooter-tab-stats" class="shooter-tab-content active">
+                    <div class="shooter-stats-grid">
+                        <div class="shooter-shop-item"><div>СКОРОСТЬ<br>УР. <span id="lvl-speed">1</span></div><button id="buy-speed" onclick="shooterBuy('speed')">$100</button></div>
+                        <div class="shooter-shop-item"><div>СКОРОСТРЕЛЬНОСТЬ<br>УР. <span id="lvl-fire">1</span></div><button id="buy-fire" onclick="shooterBuy('fire')">$150</button></div>
+                        <div class="shooter-shop-item"><div>ДОП. СТВОЛЫ<br>УР. <span id="lvl-guns">0</span></div><button id="buy-guns" onclick="shooterBuy('guns')">$300</button></div>
+                        <div class="shooter-shop-item"><div>МАКС. HP<br>УР. <span id="lvl-hp">0</span></div><button id="buy-hp" onclick="shooterBuy('hp')">$300</button></div>
+                        <div class="shooter-shop-item"><div>ЩИТ<br>УР. <span id="lvl-shield">0</span></div><button id="buy-shield" onclick="shooterBuy('shield')">$500</button></div>
+                    </div>
+                </div>
+
+                <div id="shooter-tab-skills" class="shooter-tab-content">
+                    <div class="shooter-stats-grid">
+                        <div class="shooter-shop-item"><div>КРИТ<br><span id="lvl-crit">0</span>%</div><button id="buy-crit" onclick="shooterBuy('crit')">$400</button></div>
+                        <div class="shooter-shop-item"><div>ВАМПИРИЗМ<br><span id="lvl-vamp">0</span>%</div><button id="buy-vamp" onclick="shooterBuy('vamp')">$400</button></div>
+                        <div class="shooter-shop-item"><div>ВЗРЫВ. ПУЛИ<br>УР. <span id="lvl-explode">0</span></div><button id="buy-explode" onclick="shooterBuy('explode')">$600</button></div>
+                    </div>
+                </div>
+
+                <div id="shooter-tab-drones" class="shooter-tab-content">
+                    <div class="shooter-stats-grid">
+                        <div class="shooter-shop-item"><div>КОЛ-ВО<br>УР. <span id="lvl-droneCount">0</span></div><button id="buy-droneCount" onclick="shooterBuy('droneCount')">$400</button></div>
+                        <div class="shooter-shop-item"><div>УРОН<br>УР. <span id="lvl-droneDmg">1</span></div><button id="buy-droneDmg" onclick="shooterBuy('droneDmg')">$250</button></div>
+                        <div class="shooter-shop-item"><div>СКОРОСТР.<br>УР. <span id="lvl-droneFire">1</span></div><button id="buy-droneFire" onclick="shooterBuy('droneFire')">$250</button></div>
+                    </div>
+                </div>
+
+                <div id="shooter-tab-ships" class="shooter-tab-content">
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 4px;">
+                        <div class="shooter-shop-item"><div>СТАНДАРТ</div><button onclick="shooterSelectShip('standard')" style="background:#00aa44">ВЫБРАТЬ</button></div>
+                        <div class="shooter-shop-item"><div>СТЕЛС</div><button id="buy-stealth" onclick="shooterBuyShip('stealth', 1000)">$1000</button></div>
+                        <div class="shooter-shop-item"><div>ТАНК</div><button id="buy-tank" onclick="shooterBuyShip('tank', 1500)">$1500</button></div>
+                    </div>
+                </div>
+
+                <div id="shooter-tab-ach" class="shooter-tab-content">
+                    <div id="shooter-achievements-list" style="text-align: left;"></div>
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-top: 10px; width: 100%;">
+                    <button class="btn btn-primary" style="flex:1; margin:0; padding:12px; font-size:14px;" onclick="shooterRestart()">ИГРАТЬ</button>
+                    <button class="btn btn-secondary" style="flex:1; margin:0; padding:12px; font-size:14px;" onclick="shooterResetProgress()">СБРОС</button>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-secondary" style="margin-top: 12px;" onclick="switchPage('page-profile')">⬅ Назад</button>
+    </div>
+
     <script>
         const tg = window.Telegram?.WebApp;
         let user = null;
         if (tg) { tg.ready(); tg.expand(); user = tg.initDataUnsafe?.user; }
 
-        const API_BASE_URL = "https://goofiness-equator-velvet.ngrok-free.dev"; // ТВОЙ NGROK
-        let casinoBalance = 0; 
+        const API_BASE_URL = "https://goofiness-equator-velvet.ngrok-free.dev";
+        let casinoBalance = 0;
 
         function switchPage(pageId) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
             if (pageId === 'page-snake') { startSnakeGame(); } else { stopSnakeGame(); }
+            if (pageId === 'page-shooter') { shooterStart(); } else { shooterStop(); }
         }
 
         if (user) {
@@ -261,7 +411,7 @@
         // --- СЛОТЫ ---
         let isSpinning = false;
         const symbols = ['🍒', '🍋', '🍊', '💎', '7️⃣', '🔔'];
-        
+
         function spinSlots() {
             if (isSpinning || !user) return;
             const bet = parseInt(document.getElementById('betAmount').value);
@@ -302,16 +452,15 @@
             }, 2000);
         }
 
-        // --- РУЛЕТКА (ВИЗУАЛ) ---
+        // --- РУЛЕТКА ---
         const wheelCanvas = document.getElementById('wheelCanvas');
-        const ctx = wheelCanvas.getContext('2d');
+        const wheelCtx = wheelCanvas.getContext('2d');
         const wheelRadius = 150;
         const centerX = 150;
         const centerY = 150;
-        
-        // 0 - зеленый, остальные - красные/черные
+
         const wheelNumbers = [
-            0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 
+            0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10,
             5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
         ];
         const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
@@ -319,33 +468,32 @@
         const sliceDegrees = 360 / numSectors;
 
         function drawRouletteWheel() {
-            ctx.clearRect(0, 0, 300, 300);
+            wheelCtx.clearRect(0, 0, 300, 300);
             for (let i = 0; i < numSectors; i++) {
                 const startAngle = i * (2 * Math.PI / numSectors);
                 const endAngle = (i + 1) * (2 * Math.PI / numSectors);
                 const num = wheelNumbers[i];
-                
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, wheelRadius, startAngle, endAngle);
-                
-                if (num === 0) ctx.fillStyle = "#27ae60";
-                else if (redNumbers.includes(num)) ctx.fillStyle = "#c0392b";
-                else ctx.fillStyle = "#2c3e50";
-                
-                ctx.fill();
-                ctx.strokeStyle = "#111";
-                ctx.lineWidth = 1;
-                ctx.stroke();
+
+                wheelCtx.beginPath();
+                wheelCtx.moveTo(centerX, centerY);
+                wheelCtx.arc(centerX, centerY, wheelRadius, startAngle, endAngle);
+
+                if (num === 0) wheelCtx.fillStyle = "#27ae60";
+                else if (redNumbers.includes(num)) wheelCtx.fillStyle = "#c0392b";
+                else wheelCtx.fillStyle = "#2c3e50";
+
+                wheelCtx.fill();
+                wheelCtx.strokeStyle = "#111";
+                wheelCtx.lineWidth = 1;
+                wheelCtx.stroke();
             }
-            // Внутренний круг
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 30, 0, 2 * Math.PI);
-            ctx.fillStyle = "#111";
-            ctx.fill();
-            ctx.strokeStyle = "#f1c40f";
-            ctx.lineWidth = 3;
-            ctx.stroke();
+            wheelCtx.beginPath();
+            wheelCtx.arc(centerX, centerY, 30, 0, 2 * Math.PI);
+            wheelCtx.fillStyle = "#111";
+            wheelCtx.fill();
+            wheelCtx.strokeStyle = "#f1c40f";
+            wheelCtx.lineWidth = 3;
+            wheelCtx.stroke();
         }
         drawRouletteWheel();
 
@@ -360,22 +508,18 @@
             casinoBalance -= bet; updateAllBalances();
             isRouletteSpinning = true;
             document.getElementById('rouletteResult').innerText = "";
-            
-            // Выбираем выигрышный сектор
+
             const winningIndex = Math.floor(Math.random() * numSectors);
             const winningNumber = wheelNumbers[winningIndex];
-            
-            // Вычисляем угол
+
             const targetSectorAngle = (winningIndex * sliceDegrees) + (sliceDegrees / 2);
             const baseRotation = 360 - targetSectorAngle;
             const spins = 5 * 360;
             const newRotation = currentRotation + spins + (baseRotation - (currentRotation % 360)) + (Math.random() * 5 - 2.5);
             currentRotation = newRotation;
 
-            // Крутим колесо
             wheelCanvas.style.transform = `rotate(${newRotation}deg)`;
-            
-            // Крутим шарик
+
             const ball = document.getElementById('ball');
             ball.style.transform = `translate(-50%, -50%) rotate(${-newRotation}deg) translateY(-120px)`;
 
@@ -397,18 +541,17 @@
                     document.getElementById('rouletteResult').style.color = "#e74c3c";
                     updateBalanceOnServer(user.id, -bet);
                 }
-                
+
                 updateAllBalances();
                 isRouletteSpinning = false;
-                
-                // Сбрасываем шарик в исходное положение
+
                 setTimeout(() => {
                     ball.style.transition = 'none';
                     ball.style.transform = `translate(-50%, -50%) translateY(-120px)`;
                     setTimeout(() => { ball.style.transition = 'transform 5s cubic-bezier(0.15, 0.85, 0.15, 1)'; }, 50);
                 }, 1000);
-                
-            }, 5000); // Ждем 5 секунд, пока крутится
+
+            }, 5000);
         }
 
         // --- ЗМЕЙКА ---
@@ -422,7 +565,7 @@
             const cellSize = canvas.width / gridSize;
             let snake = [{x: 8, y: 8}];
             let food = {x: 12, y: 8};
-            let dx = 0; let dy = 0; let gameStarted = false; 
+            let dx = 0; let dy = 0; let gameStarted = false;
 
             snakeScore = 0;
             document.getElementById('snake-score').innerText = snakeScore;
@@ -453,7 +596,7 @@
             drawSnake(ctx, canvas, snake, food, cellSize);
 
             snakeInterval = setInterval(() => {
-                if (!gameStarted) return; 
+                if (!gameStarted) return;
                 const head = {x: snake[0].x + dx, y: snake[0].y + dy};
                 if (head.x < 0 || head.x >= gridSize || head.y < 0 || head.y >= gridSize) return gameOverSnake();
                 for (let i = 0; i < snake.length; i++) { if (snake[i].x === head.x && snake[i].y === head.y) return gameOverSnake(); }
@@ -466,7 +609,7 @@
                     food = newFood;
                 } else { snake.pop(); }
                 drawSnake(ctx, canvas, snake, food, cellSize);
-            }, 150); 
+            }, 150);
         }
 
         function drawSnake(ctx, canvas, snake, food, cellSize) {
@@ -498,6 +641,415 @@
 
         function restartSnake() { document.getElementById('snake-gameover').style.display = 'none'; startSnakeGame(); }
         function stopSnakeGame() { if (snakeInterval) clearInterval(snakeInterval); }
+
+        // ==================== КОСМИЧЕСКИЙ ШУТЕР ====================
+        // АВТОНОМНАЯ ЭКОНОМИКА: $ в localStorage, НЕ трогает звёзды бота
+        
+        let sCanvas, sCtx;
+        let sScore = 0, sWave = 1;
+        let sMoney = parseInt(localStorage.getItem('shooter_money')) || 0;
+        let sAchievements = JSON.parse(localStorage.getItem('shooter_achievements')) || [];
+        let sUnlockedShips = JSON.parse(localStorage.getItem('shooter_ships')) || ['standard'];
+        let sCurrentShip = localStorage.getItem('shooter_current_ship') || 'standard';
+        let sUpgrades = JSON.parse(localStorage.getItem('shooter_upgrades')) || { speed:1, fire:1, guns:0, hp:0, shield:0, crit:0, vamp:0, explode:0, droneCount:0, droneDmg:1, droneFire:1 };
+        let sPrices = JSON.parse(localStorage.getItem('shooter_prices')) || { speed:100, fire:150, guns:300, hp:300, shield:500, crit:400, vamp:400, explode:600, droneCount:400, droneDmg:250, droneFire:250 };
+
+        let sGameOver = false, sIsMouseDown = false, sMouseX = 400, sMouseY = 520;
+        let sPlayer = { x:400, y:520, radius:20, cooldown:0, hp:100, maxHp:100, shieldActive:false, shieldTimer:0, shieldCooldown:0, speedMod:1 };
+        let sBullets = [], sEnemyBullets = [], sAsteroids = [], sEnemies = [], sParticles = [], sDrones = [], sBoss = null;
+        let sAnimFrame = null;
+        let sRunning = false;
+
+        const S_ACHIEVEMENTS = {
+            'first_blood': { name:'ПЕРВАЯ КРОВЬ', desc:'Убить врага', reward:100 },
+            'boss_slayer': { name:'УБИЙЦА БОССА', desc:'Убить босса', reward:1000 },
+            'survivor': { name:'ВЫЖИВШИЙ', desc:'Дожить до 5 волны', reward:500 },
+            'rich': { name:'БОГАЧ', desc:'$5000', reward:1000 },
+            'drone_master': { name:'ПОВЕЛИТЕЛЬ ДРОНОВ', desc:'3 дрона', reward:500 },
+            'tank': { name:'ТАНК', desc:'5 ур. HP', reward:300 }
+        };
+
+        function shooterInit() {
+            sCanvas = document.getElementById('shooter-canvas');
+            sCtx = sCanvas.getContext('2d');
+            sCtx.imageSmoothingEnabled = false;
+            shooterApplyShipStats();
+            shooterUpdateUI();
+            sCanvas.addEventListener('mousedown', () => sIsMouseDown = true);
+            sCanvas.addEventListener('mouseup', () => sIsMouseDown = false);
+            sCanvas.addEventListener('mousemove', (e) => {
+                const r = sCanvas.getBoundingClientRect();
+                sMouseX = (e.clientX - r.left) * (800 / r.width);
+                sMouseY = (e.clientY - r.top) * (600 / r.height);
+            });
+            sCanvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                sIsMouseDown = true;
+                const r = sCanvas.getBoundingClientRect();
+                sMouseX = (e.touches[0].clientX - r.left) * (800 / r.width);
+                sMouseY = (e.touches[0].clientY - r.top) * (600 / r.height);
+            }, {passive:false});
+            sCanvas.addEventListener('touchend', (e) => { e.preventDefault(); sIsMouseDown = false; }, {passive:false});
+            sCanvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const r = sCanvas.getBoundingClientRect();
+                sMouseX = (e.touches[0].clientX - r.left) * (800 / r.width);
+                sMouseY = (e.touches[0].clientY - r.top) * (600 / r.height);
+            }, {passive:false});
+        }
+
+        function shooterStart() {
+            if (sRunning) return;
+            sRunning = true;
+            sGameOver = false;
+            document.getElementById('shooter-overlay').style.display = 'none';
+            if (!sCanvas) shooterInit();
+            shooterResetState();
+            shooterLoop();
+        }
+
+        function shooterStop() {
+            sRunning = false;
+            if (sAnimFrame) { cancelAnimationFrame(sAnimFrame); sAnimFrame = null; }
+        }
+
+        function shooterResetState() {
+            sScore = 0; sWave = 1; sGameOver = false;
+            sBullets = []; sEnemyBullets = []; sAsteroids = []; sEnemies = []; sParticles = []; sDrones = []; sBoss = null;
+            shooterApplyShipStats();
+            sPlayer.shieldActive = false; sPlayer.shieldTimer = 0; sPlayer.shieldCooldown = 0;
+            sPlayer.x = 400; sPlayer.y = 520;
+            for (let i = 0; i < sUpgrades.droneCount; i++) {
+                sDrones.push({ x: sPlayer.x - 40 + i*20, y: sPlayer.y + 30, cooldown: 0, offsetX: -40 + i*20 });
+            }
+            shooterUpdateUI();
+        }
+
+        function shooterApplyShipStats() {
+            let baseHp = 100 + sUpgrades.hp * 10;
+            let speedMod = 1;
+            if (sCurrentShip === 'stealth') { baseHp *= 0.7; speedMod = 1.5; sPlayer.radius = 12; }
+            else if (sCurrentShip === 'tank') { baseHp *= 1.5; speedMod = 0.7; sPlayer.radius = 28; }
+            else { sPlayer.radius = 20; }
+            sPlayer.maxHp = Math.floor(baseHp);
+            sPlayer.hp = sPlayer.maxHp;
+            sPlayer.speedMod = speedMod;
+        }
+
+        function shooterUnlockAch(id) {
+            if (!sAchievements.includes(id)) {
+                sAchievements.push(id);
+                localStorage.setItem('shooter_achievements', JSON.stringify(sAchievements));
+                sMoney += S_ACHIEVEMENTS[id].reward;
+                shooterSave(); shooterUpdateUI();
+                const popup = document.getElementById('achievement-popup');
+                popup.innerText = `🏆 ${S_ACHIEVEMENTS[id].name}\n+$${S_ACHIEVEMENTS[id].reward}`;
+                popup.style.display = 'block';
+                setTimeout(() => popup.style.display = 'none', 3000);
+            }
+        }
+
+        function shooterRenderAchList() {
+            let html = '';
+            for (let id in S_ACHIEVEMENTS) {
+                const a = S_ACHIEVEMENTS[id];
+                const un = sAchievements.includes(id);
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:5px; margin-bottom:3px; border-radius:4px; background:${un?'rgba(0,170,68,0.3)':'rgba(255,255,255,0.05)'}; font-size:9px; font-family:Montserrat,sans-serif;"><div><strong>${un?'✅':'🔒'} ${a.name}</strong><br><small>${a.desc}</small></div><div style="color:#f1c40f; font-weight:700;">+$${a.reward}</div></div>`;
+            }
+            document.getElementById('shooter-achievements-list').innerHTML = html;
+        }
+
+        function shooterUpdateUI() {
+            document.getElementById('shooter-score').innerText = sScore;
+            document.getElementById('shooter-wave').innerText = sWave;
+            document.getElementById('shooter-money-display').innerText = sMoney;
+            document.getElementById('shooter-shop-money').innerText = sMoney;
+            for (let k in sUpgrades) {
+                const el = document.getElementById('lvl-'+k);
+                if (el) el.innerText = sUpgrades[k];
+            }
+            for (let k in sPrices) {
+                const btn = document.getElementById('buy-'+k.replace(/([A-Z])/g,'-$1').toLowerCase());
+                if (btn) { btn.innerText = '$'+sPrices[k]; btn.disabled = sMoney < sPrices[k]; }
+            }
+            // Кнопки кораблей
+            const btnStealth = document.getElementById('buy-stealth');
+            if (btnStealth) {
+                if (sUnlockedShips.includes('stealth')) { btnStealth.innerText = 'КУПЛЕНО'; btnStealth.disabled = true; }
+                else { btnStealth.innerText = '$1000'; btnStealth.disabled = sMoney < 1000; }
+            }
+            const btnTank = document.getElementById('buy-tank');
+            if (btnTank) {
+                if (sUnlockedShips.includes('tank')) { btnTank.innerText = 'КУПЛЕНО'; btnTank.disabled = true; }
+                else { btnTank.innerText = '$1500'; btnTank.disabled = sMoney < 1500; }
+            }
+            shooterRenderAchList();
+            if (sMoney >= 5000) shooterUnlockAch('rich');
+            if (sUpgrades.droneCount >= 3) shooterUnlockAch('drone_master');
+            if (sWave >= 5) shooterUnlockAch('survivor');
+            if (sUpgrades.hp >= 5) shooterUnlockAch('tank');
+        }
+
+        function shooterSwitchTab(id, ev) {
+            document.querySelectorAll('#page-shooter .shooter-tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#page-shooter .shooter-tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if (ev) ev.target.classList.add('active');
+        }
+
+        function shooterBuy(type) {
+            if (sMoney >= sPrices[type]) {
+                sMoney -= sPrices[type];
+                sUpgrades[type]++;
+                sPrices[type] += Math.floor(sPrices[type]*0.5);
+                if (type === 'hp') { sPlayer.maxHp += 10; sPlayer.hp += 10; }
+                shooterSave(); shooterUpdateUI();
+            }
+        }
+
+        function shooterBuyShip(ship, price) {
+            if (sMoney >= price && !sUnlockedShips.includes(ship)) {
+                sMoney -= price;
+                sUnlockedShips.push(ship);
+                localStorage.setItem('shooter_ships', JSON.stringify(sUnlockedShips));
+                shooterSave(); shooterUpdateUI();
+            }
+        }
+
+        function shooterSelectShip(ship) {
+            if (sUnlockedShips.includes(ship)) {
+                sCurrentShip = ship;
+                localStorage.setItem('shooter_current_ship', ship);
+                shooterApplyShipStats();
+                alert('Корабль выбран! Начни новую игру.');
+            }
+        }
+
+        function shooterResetProgress() {
+            if (confirm('СБРОСИТЬ ПРОГРЕСС ШУТЕРА?')) {
+                ['shooter_money','shooter_upgrades','shooter_prices','shooter_achievements','shooter_ships','shooter_current_ship'].forEach(k => localStorage.removeItem(k));
+                location.reload();
+            }
+        }
+
+        function shooterSave() {
+            localStorage.setItem('shooter_money', sMoney);
+            localStorage.setItem('shooter_upgrades', JSON.stringify(sUpgrades));
+            localStorage.setItem('shooter_prices', JSON.stringify(sPrices));
+        }
+
+        function shooterRestart() {
+            sGameOver = false;
+            document.getElementById('shooter-overlay').style.display = 'none';
+            shooterResetState();
+            if (!sRunning) { sRunning = true; shooterLoop(); }
+        }
+
+        function shooterShoot() {
+            if (sPlayer.cooldown > 0) return;
+            const total = 1 + sUpgrades.guns;
+            const spread = total > 1 ? 15 : 0;
+            for (let i = 0; i < total; i++) {
+                let offsetX = total > 1 ? (i - (total-1)/2) * spread : 0;
+                let isCrit = Math.random()*100 < sUpgrades.crit;
+                sBullets.push({ x: sPlayer.x+offsetX, y: sPlayer.y - sPlayer.radius, radius:4, speed:12, color: isCrit?'#ff00ff':'#f1c40f', damage: isCrit?2:1 });
+            }
+            sPlayer.cooldown = Math.max(15, 75 - (sUpgrades.fire-1)*5);
+        }
+
+        function shooterSpawnAsteroid() {
+            const size = Math.random()*10 + 10;
+            sAsteroids.push({ x: Math.random()*800, y: -50, radius: size, speed: Math.random()*1.5+0.5, angle: Math.random()*Math.PI*2, rotSpeed: (Math.random()-0.5)*0.05, hp:1 });
+        }
+        function shooterSpawnEnemy() {
+            const size = Math.random()*15 + 20;
+            sEnemies.push({ x: Math.random()*800, y: -50, radius: size, speed: Math.random()*0.5+0.3, hp:3, maxHp:3, shootCooldown:0 });
+        }
+        function shooterSpawnBoss() {
+            sBoss = { x:400, y:150, radius:80, hp:200, maxHp:200, shootCooldown:60 };
+            sAsteroids = []; sEnemies = [];
+            alert('⚠️ БОСС ПРИБЫЛ! ⚠️');
+        }
+        function shooterExplosion(x, y, color) {
+            for (let i = 0; i < 20; i++) {
+                const a = Math.random()*Math.PI*2, sp = Math.random()*6+1;
+                sParticles.push({ x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, life:1.0, color });
+            }
+        }
+
+        function shooterGameOver() {
+            if (sGameOver) return;
+            sGameOver = true;
+            shooterExplosion(sPlayer.x, sPlayer.y, '#00ff88');
+            if (sScore > 0) { sMoney += sScore; shooterSave(); shooterUpdateUI(); }
+            document.getElementById('shooter-overlay').style.display = 'flex';
+        }
+
+        function shooterUpdate() {
+            if (sGameOver) return;
+            if (sPlayer.shieldActive) { sPlayer.shieldTimer--; if (sPlayer.shieldTimer <= 0) sPlayer.shieldActive = false; }
+            if (sPlayer.shieldCooldown > 0) sPlayer.shieldCooldown--;
+
+            if (sIsMouseDown) {
+                const speed = (2.5 + (sUpgrades.speed-1)*0.4) * sPlayer.speedMod;
+                const dx = sMouseX - sPlayer.x, dy = sMouseY - sPlayer.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist > 5) { sPlayer.x += (dx/dist)*speed; sPlayer.y += (dy/dist)*speed; }
+                shooterShoot();
+            }
+            if (sPlayer.cooldown > 0) sPlayer.cooldown--;
+
+            for (let i = sBullets.length-1; i >= 0; i--) {
+                const b = sBullets[i];
+                if (b.vx !== undefined) { b.x += b.vx; b.y += b.vy; } else { b.y -= b.speed; }
+                if (b.y < 0 || b.x < 0 || b.x > 800) sBullets.splice(i,1);
+            }
+
+            for (let i = sEnemyBullets.length-1; i >= 0; i--) {
+                const eb = sEnemyBullets[i]; eb.y += eb.speed;
+                if (!sPlayer.shieldActive && Math.hypot(eb.x-sPlayer.x, eb.y-sPlayer.y) < sPlayer.radius+eb.radius) {
+                    sPlayer.hp -= 20; sEnemyBullets.splice(i,1);
+                    if (sPlayer.hp <= 0) { shooterGameOver(); return; }
+                    continue;
+                }
+                if (eb.y > 600) sEnemyBullets.splice(i,1);
+            }
+
+            for (let i = sAsteroids.length-1; i >= 0; i--) {
+                const a = sAsteroids[i]; a.y += a.speed; a.angle += a.rotSpeed;
+                if (!sPlayer.shieldActive && Math.hypot(a.x-sPlayer.x, a.y-sPlayer.y) < a.radius+sPlayer.radius) { shooterGameOver(); return; }
+                if (a.y > 600+a.radius) { sAsteroids.splice(i,1); continue; }
+                for (let j = sBullets.length-1; j >= 0; j--) {
+                    const b = sBullets[j];
+                    if (Math.hypot(a.x-b.x, a.y-b.y) < a.radius+b.radius) {
+                        if (sUpgrades.explode > 0) {
+                            shooterExplosion(a.x, a.y, '#ff8800');
+                            sAsteroids.forEach((o,idx) => { if (idx !== i && Math.hypot(o.x-a.x, o.y-a.y) < 80) o.hp -= 1; });
+                        }
+                        sAsteroids.splice(i,1); sBullets.splice(j,1); sScore += 10;
+                        if (sUpgrades.vamp > 0 && sPlayer.hp < sPlayer.maxHp) sPlayer.hp = Math.min(sPlayer.maxHp, sPlayer.hp+1);
+                        break;
+                    }
+                }
+            }
+
+            for (let i = sEnemies.length-1; i >= 0; i--) {
+                const e = sEnemies[i]; e.y += e.speed;
+                if (e.y > 0) { e.shootCooldown--; if (e.shootCooldown <= 0) { sEnemyBullets.push({x:e.x, y:e.y+e.radius, radius:5, speed:5, color:'#ff0000'}); e.shootCooldown = 144; } }
+                if (!sPlayer.shieldActive && Math.hypot(e.x-sPlayer.x, e.y-sPlayer.y) < e.radius+sPlayer.radius) { shooterGameOver(); return; }
+                if (e.y > 600+e.radius) { sEnemies.splice(i,1); continue; }
+                for (let j = sBullets.length-1; j >= 0; j--) {
+                    const b = sBullets[j];
+                    if (Math.hypot(e.x-b.x, e.y-b.y) < e.radius+b.radius) {
+                        e.hp -= b.damage; sBullets.splice(j,1);
+                        if (sUpgrades.vamp > 0 && sPlayer.hp < sPlayer.maxHp) sPlayer.hp = Math.min(sPlayer.maxHp, sPlayer.hp+1);
+                        if (e.hp <= 0) { shooterExplosion(e.x, e.y, '#ff4444'); sEnemies.splice(i,1); sScore += 50; shooterUnlockAch('first_blood'); }
+                        break;
+                    }
+                }
+            }
+
+            if (sBoss) {
+                sBoss.shootCooldown--;
+                if (sBoss.shootCooldown <= 0) {
+                    for (let i = -2; i <= 2; i++) sEnemyBullets.push({x:sBoss.x+i*30, y:sBoss.y+sBoss.radius, radius:6, speed:4, color:'#ff8800'});
+                    sBoss.shootCooldown = 90;
+                }
+                if (!sPlayer.shieldActive && Math.hypot(sBoss.x-sPlayer.x, sBoss.y-sPlayer.y) < sBoss.radius+sPlayer.radius) { shooterGameOver(); return; }
+                for (let j = sBullets.length-1; j >= 0; j--) {
+                    const b = sBullets[j];
+                    if (Math.hypot(sBoss.x-b.x, sBoss.y-b.y) < sBoss.radius+b.radius) {
+                        sBoss.hp -= b.damage; sBullets.splice(j,1);
+                        if (sUpgrades.vamp > 0 && sPlayer.hp < sPlayer.maxHp) sPlayer.hp = Math.min(sPlayer.maxHp, sPlayer.hp+1);
+                        if (sBoss.hp <= 0) {
+                            shooterExplosion(sBoss.x, sBoss.y, '#ff4444');
+                            sMoney += 500; sScore += 500; sBoss = null;
+                            shooterUnlockAch('boss_slayer'); sWave++;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            sDrones.forEach(d => {
+                d.x += ((sPlayer.x + d.offsetX) - d.x)*0.1;
+                d.y += ((sPlayer.y + 30) - d.y)*0.1;
+                d.cooldown--;
+                if (d.cooldown <= 0) {
+                    let target = null, minDist = 400;
+                    sEnemies.forEach(e => { const dd = Math.hypot(d.x-e.x, d.y-e.y); if (dd < minDist) { minDist = dd; target = e; } });
+                    if (sBoss) { const dd = Math.hypot(d.x-sBoss.x, d.y-sBoss.y); if (dd < minDist) { minDist = dd; target = sBoss; } }
+                    sAsteroids.forEach(a => { const dd = Math.hypot(d.x-a.x, d.y-a.y); if (dd < minDist) { minDist = dd; target = a; } });
+                    if (target) {
+                        const dx = target.x-d.x, dy = target.y-d.y, dd = Math.hypot(dx,dy);
+                        sBullets.push({ x:d.x, y:d.y, radius:3, speed:10, color:'#00aaff', damage:sUpgrades.droneDmg, vx:dx/dd*10, vy:dy/dd*10 });
+                    }
+                    d.cooldown = Math.max(20, 60 - (sUpgrades.droneFire-1)*5);
+                }
+            });
+
+            for (let i = sParticles.length-1; i >= 0; i--) { const p = sParticles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.02; if (p.life <= 0) sParticles.splice(i,1); }
+
+            if (sScore > sWave*1000) { sWave++; if (sWave % 5 === 0 && !sBoss) shooterSpawnBoss(); }
+            if (!sBoss) {
+                const rate = 0.01 + sWave*0.002;
+                if (Math.random() < rate) shooterSpawnAsteroid();
+                if (Math.random() < 0.005 + sWave*0.001) shooterSpawnEnemy();
+            }
+        }
+
+        function shooterDraw() {
+            sCtx.fillStyle = '#0a0b1a'; sCtx.fillRect(0,0,800,600);
+            sCtx.save(); sCtx.translate(sPlayer.x, sPlayer.y);
+            if (sPlayer.shieldActive) { sCtx.beginPath(); sCtx.arc(0,0,sPlayer.radius+15,0,Math.PI*2); sCtx.strokeStyle='#00aaff'; sCtx.lineWidth=4; sCtx.stroke(); sCtx.fillStyle='rgba(0,170,255,0.2)'; sCtx.fill(); }
+            sCtx.fillStyle = '#00aaff'; sCtx.fillRect(-6,15,12,10);
+            if (sCurrentShip === 'stealth') { sCtx.fillStyle='#333'; sCtx.fillRect(-10,-10,20,20); sCtx.fillStyle='#00ffff'; sCtx.fillRect(-3,-3,6,6); }
+            else if (sCurrentShip === 'tank') { sCtx.fillStyle='#555'; sCtx.fillRect(-20,-15,40,30); sCtx.fillStyle='#ff3333'; sCtx.fillRect(-25,0,10,15); sCtx.fillRect(15,0,10,15); sCtx.fillStyle='#00ffff'; sCtx.fillRect(-5,-5,10,10); }
+            else { sCtx.fillStyle='#ff3333'; sCtx.fillRect(-15,-10,30,20); sCtx.fillStyle='#cc0000'; sCtx.fillRect(-20,0,10,10); sCtx.fillRect(10,0,10,10); sCtx.fillStyle='#00ffff'; sCtx.fillRect(-5,-5,10,10); }
+            sCtx.restore();
+
+            sDrones.forEach(d => { sCtx.save(); sCtx.translate(d.x,d.y); sCtx.fillStyle='#00aaff'; sCtx.fillRect(-8,-8,16,16); sCtx.fillStyle='#fff'; sCtx.fillRect(-3,-3,6,6); sCtx.restore(); });
+            sBullets.forEach(b => { sCtx.fillStyle = b.color; sCtx.fillRect(b.x-2, b.y-10, 4, 20); });
+            sEnemyBullets.forEach(eb => { sCtx.fillStyle = eb.color; sCtx.beginPath(); sCtx.arc(eb.x,eb.y,eb.radius,0,Math.PI*2); sCtx.fill(); });
+            sAsteroids.forEach(a => { sCtx.save(); sCtx.translate(a.x,a.y); sCtx.rotate(a.angle); sCtx.fillStyle='#885533'; sCtx.beginPath(); sCtx.arc(0,0,a.radius,0,Math.PI*2); sCtx.fill(); sCtx.fillStyle='#553311'; sCtx.beginPath(); sCtx.arc(2,2,a.radius*0.5,0,Math.PI*2); sCtx.fill(); sCtx.restore(); });
+            sEnemies.forEach(e => {
+                sCtx.save(); sCtx.translate(e.x,e.y);
+                sCtx.fillStyle='#880000'; sCtx.fillRect(-20,-15,40,30);
+                sCtx.fillStyle='#222'; sCtx.fillRect(-30,-5,10,20); sCtx.fillRect(20,-5,10,20);
+                sCtx.fillStyle='#00ff00'; sCtx.fillRect(-5,-5,10,15);
+                sCtx.restore();
+                sCtx.fillStyle='#333'; sCtx.fillRect(e.x-e.radius, e.y-e.radius-10, e.radius*2, 5);
+                sCtx.fillStyle='#00ff00'; sCtx.fillRect(e.x-e.radius, e.y-e.radius-10, (e.hp/e.maxHp)*(e.radius*2), 5);
+            });
+
+            if (sBoss) {
+                sCtx.save(); sCtx.translate(sBoss.x, sBoss.y);
+                sCtx.fillStyle='#440044'; sCtx.fillRect(-sBoss.radius,-sBoss.radius/2,sBoss.radius*2,sBoss.radius);
+                sCtx.fillStyle='#220022'; sCtx.fillRect(-sBoss.radius*1.3,0,sBoss.radius*0.3,sBoss.radius); sCtx.fillRect(sBoss.radius,0,sBoss.radius*0.3,sBoss.radius);
+                sCtx.fillStyle='#ffff00'; sCtx.fillRect(-sBoss.radius*0.5,-sBoss.radius*0.2,sBoss.radius*0.3,sBoss.radius*0.3); sCtx.fillRect(sBoss.radius*0.2,-sBoss.radius*0.2,sBoss.radius*0.3,sBoss.radius*0.3);
+                sCtx.fillStyle='#ff00ff'; sCtx.fillRect(-sBoss.radius*0.2,sBoss.radius*0.1,sBoss.radius*0.4,sBoss.radius*0.4);
+                sCtx.restore();
+                sCtx.fillStyle='#333'; sCtx.fillRect(200,20,400,20);
+                sCtx.fillStyle='#ff0000'; sCtx.fillRect(200,20,(sBoss.hp/sBoss.maxHp)*400,20);
+                sCtx.strokeStyle='#fff'; sCtx.strokeRect(200,20,400,20);
+            }
+
+            sCtx.fillStyle='#333'; sCtx.fillRect(20,560,200,20);
+            sCtx.fillStyle='#00ff88'; sCtx.fillRect(20,560,(Math.max(0,sPlayer.hp)/sPlayer.maxHp)*200,20);
+            sCtx.fillStyle='#fff'; sCtx.font='12px sans-serif'; sCtx.textAlign='center';
+            sCtx.fillText(`HP: ${Math.max(0,Math.floor(sPlayer.hp))}/${sPlayer.maxHp}`, 120, 574);
+            sCtx.textAlign='left';
+
+            sParticles.forEach(p => { sCtx.globalAlpha = p.life; sCtx.fillStyle = p.color; sCtx.fillRect(p.x,p.y,4,4); });
+            sCtx.globalAlpha = 1.0;
+        }
+
+        function shooterLoop() {
+            if (!sRunning) return;
+            shooterUpdate(); shooterDraw();
+            if (!sGameOver) sAnimFrame = requestAnimationFrame(shooterLoop);
+            else sAnimFrame = null;
+        }
     </script>
 </body>
 </html>
