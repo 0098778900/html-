@@ -162,29 +162,16 @@
         .snake-header { display: flex; justify-content: space-between; width: 100%; margin-bottom: 15px; }
         .snake-score { font-size: 20px; font-weight: 800; color: var(--accent); }
 
-        /* Шутер */
+               /* Шутер */
         #shooter-canvas {
-            width: 100%; 
-            height: 65vh; /* Занимает 65% высоты экрана телефона */
-            display: block;
-            background: #0a0b1a; 
-            border: 2px solid #00ff88; 
-            border-radius: 12px;
-            touch-action: none; 
-            margin-top: 20px; /* Сдвиг вниз */
-            object-fit: cover; /* Растягивает картинку, чтобы заполнить блок */
+            width: 100%; height: auto; display: block;
+            background: #0a0b1a; border: 2px solid #00ff88; border-radius: 12px;
+            touch-action: none; max-width: 100%; margin-top: 28px;
         }
         .shooter-ui-top {
-            position: absolute; 
-            top: 30px; /* Чуть ниже верхней рамки */
-            left: 12px; 
-            color: #00ff88; 
-            font-size: 10px;
-            z-index: 10; 
-            line-height: 1.5; 
-            font-family: 'Press Start 2P', monospace;
-            pointer-events: none; 
-            text-shadow: 1px 1px 0 #000;
+            position: absolute; top: 8px; left: 8px; color: #00ff88; font-size: 9px;
+            z-index: 10; line-height: 1.5; font-family: 'Press Start 2P', monospace;
+            pointer-events: none; text-shadow: 1px 1px 0 #000;
         }
         #shooter-overlay {
             position: absolute; inset: 0; background: rgba(5,5,16,0.96); display: none;
@@ -314,8 +301,8 @@
             <h2 style="font-size: 16px;">🚀 Шутер</h2>
             <div style="font-size: 14px; font-weight: 800; color: var(--gold);">$<span id="shooter-money-display">0</span></div>
         </div>
-        <div style="position: relative; width: 100%; margin-top: 10px;">
-             <div class="shooter-ui-top">
+            <div style="position: relative; width: 100%; margin-top: 10px;">
+                <div class="shooter-ui-top">
                 СЧЕТ: <span id="shooter-score">0</span><br>ВОЛНА: <span id="shooter-wave">1</span>
             </div>
             <canvas id="shooter-canvas" width="800" height="600"></canvas>
@@ -860,8 +847,8 @@
                 cancelAnimationFrame(sAnimFrame); 
                 sAnimFrame = null; 
             }
-            shooterLoop(); // Принудительно запускаем цикл
-}
+            shooterLoop();
+        }
 
         function shooterShoot() {
             if (sPlayer.cooldown > 0) return;
