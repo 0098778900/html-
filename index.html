@@ -167,6 +167,7 @@
             width: 100%; height: auto; display: block;
             background: #0a0b1a; border: 2px solid #00ff88; border-radius: 12px;
             touch-action: none; max-width: 100%;
+            margin-top: 28px;
         }
         .shooter-ui-top {
             position: absolute; top: 6px; left: 8px; color: #00ff88; font-size: 9px;
@@ -301,8 +302,8 @@
             <h2 style="font-size: 16px;">🚀 Шутер</h2>
             <div style="font-size: 14px; font-weight: 800; color: var(--gold);">$<span id="shooter-money-display">0</span></div>
         </div>
-        <div style="position: relative; width: 100%;">
-            <div class="shooter-ui-top">
+        <div style="position: relative; width: 100%; margin-top: 8px;">
+             <div class="shooter-ui-top">
                 СЧЕТ: <span id="shooter-score">0</span><br>ВОЛНА: <span id="shooter-wave">1</span>
             </div>
             <canvas id="shooter-canvas" width="800" height="600"></canvas>
@@ -842,7 +843,9 @@
             sGameOver = false;
             document.getElementById('shooter-overlay').style.display = 'none';
             shooterResetState();
-            if (!sRunning) { sRunning = true; shooterLoop(); }
+            sRunning = true;
+            if (sAnimFrame) { cancelAnimationFrame(sAnimFrame); sAnimFrame = null; }
+            shooterLoop();
         }
 
         function shooterShoot() {
